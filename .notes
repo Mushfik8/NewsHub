@@ -1,0 +1,3 @@
+# Dependency on `crypto` built-in module conflict fix
+# Use the built-in Node.js crypto instead of npm crypto package
+# The next.config.js handles this via webpack config

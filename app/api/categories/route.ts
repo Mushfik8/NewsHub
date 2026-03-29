@@ -9,9 +9,9 @@ export async function GET() {
     });
     
     const categories = categoriesResult
-      .map(c => c.category)
-      .filter(c => c && c.trim().length > 0)
-      .sort((a, b) => a.localeCompare(b, 'bn'));
+      .map((c: any) => c.category)
+      .filter((c: any) => c && c.trim().length > 0)
+      .sort((a: any, b: any) => a.localeCompare(b, 'bn'));
 
     return NextResponse.json({ categories });
   } catch {

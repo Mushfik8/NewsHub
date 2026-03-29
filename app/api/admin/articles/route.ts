@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    return NextResponse.json({ articles: articles.map(a => ({ ...a, _id: a.id })) });
+    return NextResponse.json({ articles: articles.map((a: any) => ({ ...a, _id: a.id })) });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

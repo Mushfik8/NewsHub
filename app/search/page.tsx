@@ -52,7 +52,7 @@ function SearchResults() {
         </div>
       ) : (
         <div className="space-y-4">
-          {articles.map(a => <NewsCard key={a._id} article={a} />)}
+          {articles.map((a: Article) => <NewsCard key={a._id} article={a} />)}
         </div>
       )}
     </>

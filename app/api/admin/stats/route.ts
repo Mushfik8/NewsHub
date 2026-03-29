@@ -31,9 +31,9 @@ export async function GET(request: NextRequest) {
       totalArticles,
       lastFetch: lastLog?.timestamp || null,
       totalSources: 5,
-      categoryBreakdown: categories.map(c => ({ _id: c.category, count: c._count.category })),
-      sourceBreakdown: sources.map(s => ({ _id: s.source, count: s._count.source })),
-      recentLogs: recentLogs.map(l => ({
+      categoryBreakdown: categories.map((c: any) => ({ _id: c.category, count: c._count.category })),
+      sourceBreakdown: sources.map((s: any) => ({ _id: s.source, count: s._count.source })),
+      recentLogs: recentLogs.map((l: any) => ({
         timestamp: l.timestamp,
         totalNew: l.totalNew,
         results: JSON.parse(l.results)

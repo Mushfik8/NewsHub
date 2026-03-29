@@ -1,4 +1,5 @@
-// No React hooks used here
+'use client';
+
 import NewsCard from '@/components/NewsCard';
 import { BookmarkProvider, useBookmarks } from '@/components/BookmarkProvider';
 import { Bookmark } from 'lucide-react';
@@ -18,7 +19,7 @@ function BookmarksList() {
 
   return (
     <div className="space-y-4">
-      {bookmarks.map(a => <NewsCard key={a._id} article={a} />)}
+      {bookmarks.map((a: any) => <NewsCard key={a._id} article={a} />)}
     </div>
   );
 }

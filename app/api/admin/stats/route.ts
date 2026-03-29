@@ -7,6 +7,27 @@ export const runtime = 'nodejs';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
+type CategoryBreakdownItem = {
+  category: string;
+  _count: {
+    category: number;
+  };
+};
+
+type SourceBreakdownItem = {
+  source: string;
+  _count: {
+    source: number;
+  };
+};
+
+type RecentLogItem = {
+  timestamp: Date;
+  totalNew: number;
+  errors: number;
+  results: string;
+};
+
 export async function GET() {
   try {
     const [totalArticles, lastLog, recentLogs, categories, sources, totalSources] =
@@ -31,15 +52,15 @@ export async function GET() {
       totalArticles,
       lastFetch: lastLog?.timestamp ?? null,
       totalSources,
-      categoryBreakdown: categories.map((c) => ({
+      categoryBreakdown: categories.map((c: CategoryBreakdownItem) => ({
         _id: c.category,
         count: c._count.category,
       })),
-      sourceBreakdown: sources.map((s) => ({
+      sourceBreakdown: sources.map((s: SourceBreakdownItem) => ({
         _id: s.source,
         count: s._count.source,
       })),
-      recentLogs: recentLogs.map((l) => ({
+      recentLogs: recentLogs.map((l: RecentLogItem) => ({
         timestamp: l.timestamp,
         totalNew: l.totalNew,
         errors: l.errors,

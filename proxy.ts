@@ -1,5 +1,5 @@
 /**
- * middleware.ts — Edge middleware for admin route protection
+ * proxy.ts - Edge proxy for admin route protection
  *
  * IMPORTANT: This runs in the Edge Runtime.
  * - jose is Edge-compatible (pure JS, no Node crypto)
@@ -9,7 +9,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Protect all /api/admin/* routes EXCEPT /api/admin/login and /api/admin/logout

@@ -1,9 +1,16 @@
+/**
+ * POST /api/admin/logout
+ */
+export const runtime = 'nodejs';
+
 import { NextResponse } from 'next/server';
 
 export async function POST() {
-  const response = NextResponse.json({ success: true, message: 'সফলভাবে লগআউট হয়েছে' });
-  
-  // Clear the cookie
+  const response = NextResponse.json({
+    success: true,
+    message: 'সফলভাবে লগআউট হয়েছে',
+  });
+
   response.cookies.set('admin_token', '', {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',

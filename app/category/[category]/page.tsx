@@ -15,7 +15,7 @@ interface Article {
 
 export default function CategoryPage() {
   const params = useParams();
-  const category = decodeURIComponent(params.category as string);
+  const category = decodeURIComponent(params?.category as string || '');
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);

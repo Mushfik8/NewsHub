@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
     ]);
 
     return NextResponse.json({
-      articles: articles.map((a: any) => ({ ...a, _id: a.id })), // Map id to _id for frontend compatibility
+      articles: articles.map(a => ({ ...a, _id: a.id })), // Map id to _id for frontend compatibility
       pagination: {
         page,
         limit,

@@ -1,23 +1,51 @@
+/**
+ * lib/prisma.ts — Singleton Prisma client for Next.js (App Router)
+ *
+ * Prisma v7 + @prisma/adapter-libsql + @libsql/client
+ * - In production (Turso): uses libSQL adapter with TURSO_DATABASE_URL + TURSO_AUTH_TOKEN
+ * - In development: uses local SQLite via libSQL file:// adapter
+ * - Singleton pattern prevents multiple instances during hot-reload
+ *
+ * NOTE: In Prisma v7, the driver adapter pattern requires:
+ *   createClient() from @libsql/client  →  new PrismaLibSql(libsql)  →  new PrismaClient({ adapter })
+ */
 import { PrismaClient } from '@prisma/client';
 import { PrismaLibSql } from '@prisma/adapter-libsql';
+import { createClient } from '@libsql/client';
 
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined;
-};
+declare global {
+  // eslint-disable-next-line no-var
+  var __prisma: PrismaClient | undefined;
+}
 
-const isTurso = !!(process.env.TURSO_DATABASE_URL && process.env.TURSO_AUTH_TOKEN);
+function createPrismaClient(): PrismaClient {
+  const isTurso =
+    typeof process.env.TURSO_DATABASE_URL === 'string' &&
+    process.env.TURSO_DATABASE_URL.startsWith('libsql://');
 
-const createPrismaClient = () => {
+  let adapterConfig: { url: string; authToken?: string };
+
   if (isTurso) {
-    const adapter = new PrismaLibSql({
+    // Production: Turso cloud database
+    adapterConfig = {
       url: process.env.TURSO_DATABASE_URL!,
       authToken: process.env.TURSO_AUTH_TOKEN,
-    });
-    return new PrismaClient({ adapter, log: ['query'] });
+    };
+  } else {
+    // Development: local SQLite file
+    const dbPath = `${process.cwd()}/prisma/dev.db`;
+    adapterConfig = { url: `file:${dbPath}` };
   }
-  return new PrismaClient({ log: ['query'] });
-};
 
-export const prisma = globalForPrisma.prisma ?? createPrismaClient();
+  // In @prisma/adapter-libsql 7.x it expects a config object with url and authToken.
+  const adapter = new PrismaLibSql(adapterConfig);
+  return new PrismaClient({ adapter } as any);
+}
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+export const prisma: PrismaClient =
+  global.__prisma ?? createPrismaClient();
+
+// Persist singleton across hot-reloads in development only
+if (process.env.NODE_ENV !== 'production') {
+  global.__prisma = prisma;
+}

@@ -1,7 +1,8 @@
-// This is your Prisma schema file.
+// Prisma v7 schema — URL has moved to prisma.config.ts
+// Only provider is set here; url is NOT included (Prisma v7 change)
+
 datasource db {
   provider = "sqlite"
-  url      = "file:./dev.db"
 }
 
 generator client {

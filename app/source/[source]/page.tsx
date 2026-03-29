@@ -16,7 +16,7 @@ interface Article {
 
 export default function SourcePage() {
   const params = useParams();
-  const sourceSlug = params.source as string;
+  const sourceSlug = (params?.source as string) || '';
   const sourceInfo = DEFAULT_SOURCES.find(s => s.slug === sourceSlug);
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);

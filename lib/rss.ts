@@ -1,6 +1,13 @@
+/**
+ * lib/rss.ts — RSS ingestion engine
+ *
+ * Reads active sources from DB (Source table), falls back to DEFAULT_SOURCES
+ * if DB has no configured sources. Deduplicates via urlHash (SHA256).
+ * Logs results to FetchLog table.
+ */
 import Parser from 'rss-parser';
 import { generateSlug, generateUrlHash, sanitizeText, truncate } from './utils';
-import { detectCategory, DEFAULT_SOURCES, FeedSource } from './sources';
+import { detectCategory, DEFAULT_SOURCES, type FeedSource } from './sources';
 import { prisma } from './prisma';
 
 const parser = new Parser({
@@ -50,14 +57,23 @@ async function fetchSource(source: FeedSource): Promise<number> {
 
     const urlHash = generateUrlHash(item.link);
 
+    // Deduplicate by urlHash
     const exists = await prisma.article.findUnique({ where: { urlHash } });
     if (exists) continue;
 
-    const rawDescription = item.contentSnippet || item.summary || item.content || '';
+    const rawDescription =
+      item.contentSnippet || item.summary || item.content || '';
     const description = truncate(sanitizeText(rawDescription), 200);
     const title = sanitizeText(item.title);
     const category = detectCategory(title, description);
-    const slug = generateSlug(title);
+
+    // Ensure slug uniqueness by appending urlHash prefix on collision
+    let slug = generateSlug(title);
+    const slugExists = await prisma.article.findUnique({ where: { slug } });
+    if (slugExists) {
+      slug = `${slug}-${urlHash.slice(0, 6)}`;
+    }
+
     const image = extractImage(item);
     const publishedAt = item.isoDate
       ? new Date(item.isoDate)
@@ -65,38 +81,71 @@ async function fetchSource(source: FeedSource): Promise<number> {
       ? new Date(item.pubDate)
       : new Date();
 
-    await prisma.article.create({
-      data: {
-        title,
-        slug,
-        source: source.name,
-        sourceSlug: source.slug,
-        sourceUrl: source.siteUrl,
-        originalLink: item.link,
-        publishedAt,
-        image,
-        category,
-        description,
-        urlHash,
-        views: 0,
+    try {
+      await prisma.article.create({
+        data: {
+          title,
+          slug,
+          source: source.name,
+          sourceSlug: source.slug,
+          sourceUrl: source.siteUrl,
+          originalLink: item.link,
+          publishedAt,
+          image,
+          category,
+          description,
+          urlHash,
+          views: 0,
+        },
+      });
+      newCount++;
+    } catch (createError: any) {
+      // Ignore unique constraint violations (race condition safety)
+      if (!createError.message?.includes('Unique constraint')) {
+        throw createError;
       }
-    });
-
-    newCount++;
+    }
   }
 
   return newCount;
 }
 
-export async function runFetchJob(): Promise<{
+/**
+ * Get sources to fetch: prioritises active DB sources, falls back to hardcoded list.
+ */
+async function getActiveSources(): Promise<FeedSource[]> {
+  try {
+    const dbSources = await prisma.source.findMany({
+      where: { isActive: true },
+    });
+    if (dbSources.length > 0) {
+      return dbSources.map((s) => ({
+        name: s.name,
+        slug: s.slug,
+        feedUrl: s.feedUrl,
+        siteUrl: s.siteUrl,
+        defaultCategory: s.defaultCategory,
+        language: s.language,
+      }));
+    }
+  } catch {
+    console.warn('[RSS] Could not read sources from DB, using DEFAULT_SOURCES');
+  }
+  return DEFAULT_SOURCES;
+}
+
+export interface FetchJobResult {
   totalNew: number;
   results: Array<{ source: string; new: number; error?: string }>;
-}> {
+}
+
+export async function runFetchJob(): Promise<FetchJobResult> {
+  const sources = await getActiveSources();
   const results: Array<{ source: string; new: number; error?: string }> = [];
   let totalNew = 0;
   let errors = 0;
 
-  for (const source of DEFAULT_SOURCES) {
+  for (const source of sources) {
     try {
       const count = await fetchSource(source);
       results.push({ source: source.name, new: count });
@@ -114,7 +163,7 @@ export async function runFetchJob(): Promise<{
       totalNew,
       errors,
       results: JSON.stringify(results),
-    }
+    },
   });
 
   return { totalNew, results };

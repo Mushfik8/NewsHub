@@ -11,7 +11,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       select: { slug: true, updatedAt: true },
     });
 
-    const newsUrls = articles.map((article: any) => ({
+    const newsUrls = articles.map((article) => ({
       url: `${baseUrl}/news/${article.slug}`,
       lastModified: article.updatedAt,
       changeFrequency: 'weekly' as const,
@@ -27,7 +27,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       },
       ...newsUrls,
     ];
-  } catch (error: any) {
+  } catch (error) {
     console.error('Sitemap generation failed:', error);
     return [
       {

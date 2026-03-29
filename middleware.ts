@@ -1,17 +1,30 @@
+/**
+ * middleware.ts — Edge middleware for admin route protection
+ *
+ * IMPORTANT: This runs in the Edge Runtime.
+ * - jose is Edge-compatible (pure JS, no Node crypto)
+ * - Prisma is NOT imported here (Node.js only)
+ * - Only cookie-based JWT verification happens here
+ */
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // UI routing is handled by the client-side React component at /admin
-  // which defaults to showing the login form.
-
-  // Protect Admin API Routes (excluding login)
-  if (pathname.startsWith('/api/admin') && !pathname.includes('/login')) {
+  // Protect all /api/admin/* routes EXCEPT /api/admin/login and /api/admin/logout
+  if (
+    pathname.startsWith('/api/admin') &&
+    !pathname.endsWith('/login') &&
+    !pathname.endsWith('/logout')
+  ) {
     const token = request.cookies.get('admin_token')?.value;
-    if (!token || !(await verifyToken(token))) {
+    if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const payload = await verifyToken(token);
+    if (!payload) {
+      return NextResponse.json({ error: 'Invalid or expired token' }, { status: 401 });
     }
   }
 
@@ -19,5 +32,6 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
+  // Match admin page and all admin API routes
   matcher: ['/admin/:path*', '/api/admin/:path*'],
 };

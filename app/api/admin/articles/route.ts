@@ -5,21 +5,18 @@
 export const runtime = 'nodejs';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 
-type AdminArticleListItem = Prisma.ArticleGetPayload<{
-  select: {
-    id: true;
-    title: true;
-    slug: true;
-    source: true;
-    views: true;
-    publishedAt: true;
-    category: true;
-    originalLink: true;
-  };
-}>;
+type AdminArticleListItem = {
+  id: string;
+  title: string;
+  slug: string;
+  source: string;
+  views: number;
+  publishedAt: Date;
+  category: string;
+  originalLink: string;
+};
 
 export async function GET(request: NextRequest) {
   try {

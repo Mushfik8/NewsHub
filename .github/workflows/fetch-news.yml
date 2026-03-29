@@ -1,0 +1,16 @@
+name: Fetch News Aggregator
+
+on:
+  schedule:
+    - cron: '*/15 * * * *' # Run every 15 minutes for free!
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  fetch-news:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call Fetch API
+        run: |
+          curl -X POST "https://${{ secrets.VERCEL_PROJECT_URL }}/api/cron/fetch" \
+          -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+          -d ""

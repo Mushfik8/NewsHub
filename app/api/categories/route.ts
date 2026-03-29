@@ -14,7 +14,7 @@ export async function GET() {
       .sort((a, b) => a.localeCompare(b, 'bn'));
 
     return NextResponse.json({ categories });
-  } catch (error: any) {
+  } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

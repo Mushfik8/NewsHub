@@ -35,16 +35,25 @@ export const metadata: Metadata = {
   },
 };
 
+import { Inter, Hind_Siliguri } from 'next/font/google';
+
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-inter',
+});
+
+const hindSiliguri = Hind_Siliguri({
+  weight: ['300', '400', '500', '600', '700'],
+  subsets: ['bengali'],
+  display: 'swap',
+  variable: '--font-hind',
+});
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="bn" suppressHydrationWarning>
+    <html lang="bn" className={`${inter.variable} ${hindSiliguri.variable}`} suppressHydrationWarning>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Hind+Siliguri:wght@300;400;500;600;700&display=swap"
-          rel="stylesheet"
-        />
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -60,7 +69,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
       </head>
-      <body className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-900 transition-colors duration-300">
+      <body className={`${inter.className} min-h-screen flex flex-col bg-slate-50 dark:bg-slate-900 transition-colors duration-300`}>
         <ThemeProvider>
           <Navbar />
           <main className="flex-1 w-full">

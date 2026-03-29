@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { RefreshCw, BarChart3, Newspaper, Clock, AlertCircle, CheckCircle, Lock } from 'lucide-react';
 
 interface Stats {
@@ -53,8 +53,6 @@ export default function AdminPage() {
     try {
       const res = await fetch('/api/cron/fetch', {
         method: 'POST',
-        // The API cron route will need to be refactored to allow UI triggers if env secret isn't available.
-        // For now, let's keep it as is, or we can just send an empty body since it's locally driven
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed');

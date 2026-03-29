@@ -1,6 +1,4 @@
-'use client';
-
-import { useEffect, useState } from 'react';
+// No React hooks used here
 import NewsCard from '@/components/NewsCard';
 import { BookmarkProvider, useBookmarks } from '@/components/BookmarkProvider';
 import { Bookmark } from 'lucide-react';

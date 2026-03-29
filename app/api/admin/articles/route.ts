@@ -5,7 +5,21 @@
 export const runtime = 'nodejs';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
+
+type AdminArticleListItem = Prisma.ArticleGetPayload<{
+  select: {
+    id: true;
+    title: true;
+    slug: true;
+    source: true;
+    views: true;
+    publishedAt: true;
+    category: true;
+    originalLink: true;
+  };
+}>;
 
 export async function GET(request: NextRequest) {
   try {
@@ -34,7 +48,7 @@ export async function GET(request: NextRequest) {
     ]);
 
     return NextResponse.json({
-      articles: articles.map((a) => ({ ...a, _id: a.id })),
+      articles: articles.map((a: AdminArticleListItem) => ({ ...a, _id: a.id })),
       total,
       page,
       pages: Math.ceil(total / limit),

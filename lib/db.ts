@@ -59,6 +59,7 @@ export interface ListArticlesInput {
   query?: string;
   limit?: number;
   offset?: number;
+  rankLimit?: number; // Limits articles per source (diversity)
 }
 
 export interface CreateArticleInput {
@@ -395,12 +396,47 @@ export async function listArticles(filters: ListArticlesInput = {}) {
   const offset = filters.offset ?? 0;
   const { whereSql, args } = buildArticleWhere(filters);
 
+  // If rankLimit is provided, we use a subquery with ROW_NUMBER() for diversity
+  if (filters.rankLimit && filters.rankLimit > 0) {
+    const [articlesResult, countResult] = await Promise.all([
+      execute(
+        `
+          SELECT * FROM (
+            SELECT *, ROW_NUMBER() OVER (PARTITION BY "sourceSlug" ORDER BY "publishedAt" DESC) as "_rank"
+            FROM "Article"
+            ${whereSql}
+          )
+          WHERE "_rank" <= ?
+          ORDER BY "publishedAt" DESC, "id" DESC
+          LIMIT ? OFFSET ?
+        `,
+        [...args, filters.rankLimit, limit, offset]
+      ),
+      execute(
+        `
+          SELECT COUNT(*) AS count FROM (
+            SELECT ROW_NUMBER() OVER (PARTITION BY "sourceSlug") as "_rank"
+            FROM "Article"
+            ${whereSql}
+          ) WHERE "_rank" <= ?
+        `,
+        [...args, filters.rankLimit]
+      ),
+    ]);
+
+    return {
+      items: articlesResult.rows.map(mapArticle),
+      total: asNumber(countResult.rows[0]?.count),
+    };
+  }
+
+  // Standard query (optimized for no diversity constraint)
   const [articlesResult, countResult] = await Promise.all([
     execute(
       `
         SELECT * FROM "Article"
         ${whereSql}
-        ORDER BY "publishedAt" DESC
+        ORDER BY "publishedAt" DESC, "id" DESC
         LIMIT ? OFFSET ?
       `,
       [...args, limit, offset]

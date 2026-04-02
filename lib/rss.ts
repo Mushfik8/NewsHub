@@ -8,7 +8,13 @@
 import Parser from 'rss-parser';
 import { generateSlug, generateUrlHash, sanitizeText, truncate } from './utils';
 import { detectCategory, DEFAULT_SOURCES, type FeedSource } from './sources';
-import { prisma } from './prisma';
+import {
+  createArticle,
+  createFetchLog,
+  findArticleBySlug,
+  findArticleByUrlHash,
+  listActiveSources,
+} from './db';
 
 const parser = new Parser({
   customFields: {
@@ -56,9 +62,7 @@ async function fetchSource(source: FeedSource): Promise<number> {
     if (!item.title || !item.link) continue;
 
     const urlHash = generateUrlHash(item.link);
-
-    // Deduplicate by urlHash
-    const exists = await prisma.article.findUnique({ where: { urlHash } });
+    const exists = await findArticleByUrlHash(urlHash);
     if (exists) continue;
 
     const rawDescription =
@@ -67,9 +71,8 @@ async function fetchSource(source: FeedSource): Promise<number> {
     const title = sanitizeText(item.title);
     const category = detectCategory(title, description);
 
-    // Ensure slug uniqueness by appending urlHash prefix on collision
     let slug = generateSlug(title);
-    const slugExists = await prisma.article.findUnique({ where: { slug } });
+    const slugExists = await findArticleBySlug(slug);
     if (slugExists) {
       slug = `${slug}-${urlHash.slice(0, 6)}`;
     }
@@ -78,30 +81,30 @@ async function fetchSource(source: FeedSource): Promise<number> {
     const publishedAt = item.isoDate
       ? new Date(item.isoDate)
       : item.pubDate
-      ? new Date(item.pubDate)
-      : new Date();
+        ? new Date(item.pubDate)
+        : new Date();
 
     try {
-      await prisma.article.create({
-        data: {
-          title,
-          slug,
-          source: source.name,
-          sourceSlug: source.slug,
-          sourceUrl: source.siteUrl,
-          originalLink: item.link,
-          publishedAt,
-          image,
-          category,
-          description,
-          urlHash,
-          views: 0,
-        },
+      await createArticle({
+        title,
+        slug,
+        source: source.name,
+        sourceSlug: source.slug,
+        sourceUrl: source.siteUrl,
+        originalLink: item.link,
+        publishedAt,
+        image,
+        category,
+        description,
+        urlHash,
+        views: 0,
       });
       newCount++;
     } catch (createError: any) {
-      // Ignore unique constraint violations (race condition safety)
-      if (!createError.message?.includes('Unique constraint')) {
+      if (
+        !createError.message?.includes('UNIQUE') &&
+        !createError.message?.includes('constraint')
+      ) {
         throw createError;
       }
     }
@@ -110,27 +113,16 @@ async function fetchSource(source: FeedSource): Promise<number> {
   return newCount;
 }
 
-/**
- * Get sources to fetch: prioritises active DB sources, falls back to hardcoded list.
- */
 async function getActiveSources(): Promise<FeedSource[]> {
   try {
-    const dbSources = await prisma.source.findMany({
-      where: { isActive: true },
-    });
+    const dbSources = await listActiveSources();
     if (dbSources.length > 0) {
-      return dbSources.map((s) => ({
-        name: s.name,
-        slug: s.slug,
-        feedUrl: s.feedUrl,
-        siteUrl: s.siteUrl,
-        defaultCategory: s.defaultCategory,
-        language: s.language,
-      }));
+      return dbSources;
     }
   } catch {
     console.warn('[RSS] Could not read sources from DB, using DEFAULT_SOURCES');
   }
+
   return DEFAULT_SOURCES;
 }
 
@@ -157,13 +149,10 @@ export async function runFetchJob(): Promise<FetchJobResult> {
     }
   }
 
-  // Save fetch log
-  await prisma.fetchLog.create({
-    data: {
-      totalNew,
-      errors,
-      results: JSON.stringify(results),
-    },
+  await createFetchLog({
+    totalNew,
+    errors,
+    results: JSON.stringify(results),
   });
 
   return { totalNew, results };

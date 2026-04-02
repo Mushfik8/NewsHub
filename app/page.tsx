@@ -1,12 +1,13 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { Fragment } from 'react';
 import NewsCard from '@/components/NewsCard';
 import { GridSkeleton, FeaturedCardSkeleton } from '@/components/Skeleton';
 import AdSlot from '@/components/AdSlot';
 import { BookmarkProvider } from '@/components/BookmarkProvider';
 import { TrendingUp, RefreshCw, Flame } from 'lucide-react';
-import { CATEGORIES } from '@/lib/sources';
+import { CATEGORIES, DEFAULT_SOURCES } from '@/lib/sources';
 
 interface Article {
   _id: string;
@@ -21,6 +22,12 @@ interface Article {
   description: string;
 }
 
+interface SourceItem {
+  name: string;
+  slug: string;
+  siteUrl: string;
+}
+
 interface Pagination {
   page: number;
   total: number;
@@ -28,9 +35,20 @@ interface Pagination {
   hasNext: boolean;
 }
 
+const sourceDotColors = [
+  'bg-red-500',
+  'bg-blue-500',
+  'bg-green-500',
+  'bg-orange-500',
+  'bg-purple-500',
+  'bg-cyan-500',
+  'bg-pink-500',
+];
+
 export default function HomePage() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [trending, setTrending] = useState<Article[]>([]);
+  const [sources, setSources] = useState<SourceItem[]>(DEFAULT_SOURCES);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [activeCategory, setActiveCategory] = useState('সব');
@@ -61,10 +79,21 @@ export default function HomePage() {
     } catch {/**/}
   }, []);
 
+  const fetchSources = useCallback(async () => {
+    try {
+      const res = await fetch('/api/sources');
+      const data = await res.json();
+      if (Array.isArray(data.sources) && data.sources.length > 0) {
+        setSources(data.sources);
+      }
+    } catch {/**/}
+  }, []);
+
   useEffect(() => {
     fetchArticles('সব', 1);
     fetchTrending();
-  }, [fetchArticles, fetchTrending]);
+    fetchSources();
+  }, [fetchArticles, fetchTrending, fetchSources]);
 
   const handleCategoryChange = (cat: string) => {
     setActiveCategory(cat);
@@ -84,13 +113,10 @@ export default function HomePage() {
   return (
     <BookmarkProvider>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
-        {/* Header Ad */}
         <AdSlot type="banner" className="mb-6 hidden md:flex" />
 
         <div className="flex flex-col lg:flex-row gap-6">
-          {/* Main Content */}
           <div className="flex-1 min-w-0">
-            {/* Category Filters */}
             <div className="flex items-center gap-2 mb-5 overflow-x-auto scroll-hidden pb-1">
               {CATEGORIES.map((cat) => (
                 <button
@@ -106,7 +132,7 @@ export default function HomePage() {
             {loading ? (
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                  {[0,1,2,3].map(i => <FeaturedCardSkeleton key={i} />)}
+                  {[0, 1, 2, 3].map((i) => <FeaturedCardSkeleton key={i} />)}
                 </div>
                 <GridSkeleton count={6} />
               </>
@@ -118,32 +144,29 @@ export default function HomePage() {
               </div>
             ) : (
               <>
-                {/* Featured Grid */}
                 <div className="mb-2">
                   <h2 className="section-title mb-4">
                     <Flame className="w-5 h-5 text-orange-500" />
                     সর্বশেষ সংবাদ
                   </h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                    {featured.map((a) => (
-                      <NewsCard key={a._id} article={a} variant="featured" />
+                    {featured.map((article) => (
+                      <NewsCard key={article._id} article={article} variant="featured" />
                     ))}
                   </div>
                 </div>
 
                 <AdSlot type="rectangle" className="mb-6" />
 
-                {/* Rest of articles */}
                 <div className="space-y-4">
-                  {rest.map((a, i) => (
-                    <>
-                      <NewsCard key={a._id} article={a} variant="default" />
-                      {(i + 1) % 8 === 0 && <AdSlot type="rectangle" key={`ad-${i}`} />}
-                    </>
+                  {rest.map((article, index) => (
+                    <Fragment key={article._id}>
+                      <NewsCard article={article} variant="default" />
+                      {(index + 1) % 8 === 0 && <AdSlot type="rectangle" />}
+                    </Fragment>
                   ))}
                 </div>
 
-                {/* Load More */}
                 {pagination?.hasNext && (
                   <div className="text-center mt-8">
                     <button
@@ -160,11 +183,9 @@ export default function HomePage() {
             )}
           </div>
 
-          {/* Sidebar */}
           <aside className="w-full lg:w-72 xl:w-80 flex-shrink-0 space-y-6">
             <AdSlot type="sidebar" />
 
-            {/* Trending */}
             {trending.length > 0 && (
               <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4" style={{ boxShadow: 'var(--shadow)' }}>
                 <h3 className="section-title mb-4">
@@ -172,33 +193,31 @@ export default function HomePage() {
                   ট্রেন্ডিং
                 </h3>
                 <div className="space-y-1">
-                  {trending.map((a, i) => (
-                    <div key={a._id} className="flex gap-3 py-2 border-b border-slate-100 dark:border-slate-700 last:border-0">
+                  {trending.map((article, index) => (
+                    <div key={article._id} className="flex gap-3 py-2 border-b border-slate-100 dark:border-slate-700 last:border-0">
                       <span className="text-2xl font-black text-slate-200 dark:text-slate-700 w-7 flex-shrink-0 leading-none mt-1">
-                        {i + 1}
+                        {index + 1}
                       </span>
-                      <NewsCard article={a} variant="compact" />
+                      <NewsCard article={article} variant="compact" />
                     </div>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Sources */}
             <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4" style={{ boxShadow: 'var(--shadow)' }}>
               <h3 className="section-title mb-4">📡 সংবাদ সূত্র</h3>
-              {[
-                { name: 'BBC বাংলা', slug: 'bbc-bangla', color: 'bg-red-500' },
-                { name: 'প্রথম আলো', slug: 'prothom-alo', color: 'bg-blue-500' },
-                { name: 'সময় টিভি', slug: 'somoy-tv', color: 'bg-green-500' },
-                { name: 'যুগান্তর', slug: 'jugantor', color: 'bg-orange-500' },
-                { name: 'বিডিনিউজ২৪', slug: 'bdnews24', color: 'bg-purple-500' },
-              ].map((src) => (
-                <a key={src.slug} href={`/source/${src.slug}`}
-                  className="flex items-center gap-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-700/50 rounded-lg px-2 transition-colors group">
-                  <span className={`w-2.5 h-2.5 rounded-full ${src.color} flex-shrink-0`} />
+              {sources.map((source, index) => (
+                <a
+                  key={source.slug}
+                  href={`/source/${source.slug}`}
+                  className="flex items-center gap-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-700/50 rounded-lg px-2 transition-colors group"
+                >
+                  <span
+                    className={`w-2.5 h-2.5 rounded-full ${sourceDotColors[index % sourceDotColors.length]} flex-shrink-0`}
+                  />
                   <span className="text-sm font-medium text-slate-700 dark:text-slate-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                    {src.name}
+                    {source.name}
                   </span>
                 </a>
               ))}

@@ -5,7 +5,7 @@
 export const runtime = 'nodejs';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { findUserByEmail } from '@/lib/db';
 import bcrypt from 'bcryptjs';
 import { signToken } from '@/lib/auth';
 
@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await findUserByEmail(email);
     if (!user) {
       return NextResponse.json(
         { error: 'ভুল ইমেইল বা পাসওয়ার্ড' },
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
-      maxAge: 60 * 60 * 24, // 24 hours
+      maxAge: 60 * 60 * 24,
     });
 
     return response;

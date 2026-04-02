@@ -6,8 +6,8 @@ const nextConfig = {
       { protocol: 'http', hostname: '**' },
     ],
   },
-  // Prevent Prisma + libSQL from being bundled by webpack (they're native/CJS)
-  serverExternalPackages: ['@prisma/client', '@prisma/adapter-libsql', '@libsql/client'],
+  // Keep the libSQL client external on the server bundle.
+  serverExternalPackages: ['@libsql/client'],
   experimental: {},
 };
 

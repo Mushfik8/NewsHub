@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { findArticleBySlug, incrementArticleViews } from '@/lib/db';
 
 export async function GET(
   request: NextRequest,
@@ -7,23 +7,17 @@ export async function GET(
 ) {
   try {
     const slug = (await params).slug;
-    const article = await prisma.article.findUnique({
-      where: { slug },
-    });
+    const article = await findArticleBySlug(slug);
 
     if (!article) {
       return NextResponse.json({ error: 'News not found' }, { status: 404 });
     }
 
-    // Fire and forget view increment
-    prisma.article.update({
-      where: { id: article.id },
-      data: { views: { increment: 1 } },
-    }).catch(console.error);
+    incrementArticleViews(article.id).catch(console.error);
 
     return NextResponse.json({
       ...article,
-      _id: article.id // Map id for frontend compatibility
+      _id: article.id,
     });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

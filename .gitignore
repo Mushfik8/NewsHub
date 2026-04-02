@@ -30,7 +30,9 @@ yarn-error.log*
 .env*.local
 .env
 
-# prisma
+# local databases
+/data/news.db
+/data/news.db-*
 /prisma/dev.db
 /prisma/dev.db-journal
 /test.db

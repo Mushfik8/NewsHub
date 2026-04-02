@@ -3,7 +3,7 @@
  *
  * IMPORTANT: This runs in the Edge Runtime.
  * - jose is Edge-compatible (pure JS, no Node crypto)
- * - Prisma is NOT imported here (Node.js only)
+ * - Database code is NOT imported here (Node.js only)
  * - Only cookie-based JWT verification happens here
  */
 import { NextRequest, NextResponse } from 'next/server';

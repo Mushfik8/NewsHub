@@ -1,18 +1,21 @@
 /**
  * /api/admin/sources — Manage news sources from admin dashboard
- * Force Node.js runtime — Prisma requires Node.js
+ * Force Node.js runtime for SQL access.
  */
 export const runtime = 'nodejs';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import {
+  createSource,
+  deleteSource,
+  listSources,
+  type UpdateSourceInput,
+  updateSource,
+} from '@/lib/db';
 
-// GET — list all sources
 export async function GET() {
   try {
-    const sources = await prisma.source.findMany({
-      orderBy: { createdAt: 'desc' },
-    });
+    const sources = await listSources();
     return NextResponse.json({ sources });
   } catch (error: any) {
     console.error('[Sources GET Error]', error);
@@ -20,7 +23,6 @@ export async function GET() {
   }
 }
 
-// POST — create a new source
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -33,21 +35,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const source = await prisma.source.create({
-      data: {
-        name,
-        slug,
-        feedUrl,
-        siteUrl,
-        defaultCategory,
-        language: language ?? 'bn',
-        isActive: isActive ?? true,
-      },
+    const source = await createSource({
+      name,
+      slug,
+      feedUrl,
+      siteUrl,
+      defaultCategory,
+      language,
+      isActive,
     });
 
     return NextResponse.json({ source }, { status: 201 });
   } catch (error: any) {
-    if (error.message?.includes('Unique constraint')) {
+    if (error.code === 'SOURCE_SLUG_EXISTS') {
       return NextResponse.json({ error: 'এই slug আগে থেকেই আছে' }, { status: 409 });
     }
     console.error('[Sources POST Error]', error);
@@ -55,7 +55,6 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// PATCH — update a source
 export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json();
@@ -65,35 +64,39 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'ID দিন' }, { status: 400 });
     }
 
-    // Only allow specific fields to be updated
-    const allowedUpdates: Record<string, unknown> = {};
-    const allowed = ['name', 'feedUrl', 'siteUrl', 'defaultCategory', 'language', 'isActive'];
-    for (const key of allowed) {
-      if (key in updates) allowedUpdates[key] = updates[key];
-    }
+    const allowedUpdates: UpdateSourceInput = {};
 
-    const source = await prisma.source.update({
-      where: { id },
-      data: allowedUpdates,
-    });
+    if ('name' in updates) allowedUpdates.name = updates.name;
+    if ('feedUrl' in updates) allowedUpdates.feedUrl = updates.feedUrl;
+    if ('siteUrl' in updates) allowedUpdates.siteUrl = updates.siteUrl;
+    if ('defaultCategory' in updates) allowedUpdates.defaultCategory = updates.defaultCategory;
+    if ('language' in updates) allowedUpdates.language = updates.language;
+    if ('isActive' in updates) allowedUpdates.isActive = updates.isActive;
 
+    const source = await updateSource(id, allowedUpdates);
     return NextResponse.json({ source });
   } catch (error: any) {
+    if (error.code === 'NOT_FOUND') {
+      return NextResponse.json({ error: 'Source not found' }, { status: 404 });
+    }
     console.error('[Sources PATCH Error]', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
-// DELETE — remove a source
 export async function DELETE(request: NextRequest) {
   try {
     const { id } = await request.json();
     if (!id) {
       return NextResponse.json({ error: 'ID দিন' }, { status: 400 });
     }
-    await prisma.source.delete({ where: { id } });
+
+    await deleteSource(id);
     return NextResponse.json({ success: true });
   } catch (error: any) {
+    if (error.code === 'NOT_FOUND') {
+      return NextResponse.json({ error: 'Source not found' }, { status: 404 });
+    }
     console.error('[Sources DELETE Error]', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

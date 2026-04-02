@@ -1,71 +1,53 @@
 /**
  * GET /api/admin/stats
- * Force Node.js runtime — Prisma requires Node.js
+ * Force Node.js runtime for SQL access and RSS tooling.
  */
 export const runtime = 'nodejs';
 
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-
-type CategoryBreakdownItem = {
-  category: string;
-  _count: {
-    category: number;
-  };
-};
-
-type SourceBreakdownItem = {
-  source: string;
-  _count: {
-    source: number;
-  };
-};
-
-type RecentLogItem = {
-  timestamp: Date;
-  totalNew: number;
-  errors: number;
-  results: string;
-};
+import {
+  countActiveSources,
+  countArticles,
+  getCategoryBreakdown,
+  getLatestFetchLog,
+  getSourceBreakdown,
+  listFetchLogs,
+} from '@/lib/db';
 
 export async function GET() {
   try {
     const [totalArticles, lastLog, recentLogs, categories, sources, totalSources] =
       await Promise.all([
-        prisma.article.count(),
-        prisma.fetchLog.findFirst({ orderBy: { timestamp: 'desc' } }),
-        prisma.fetchLog.findMany({ orderBy: { timestamp: 'desc' }, take: 10 }),
-        prisma.article.groupBy({
-          by: ['category'],
-          _count: { category: true },
-          orderBy: { _count: { category: 'desc' } },
-        }),
-        prisma.article.groupBy({
-          by: ['source'],
-          _count: { source: true },
-          orderBy: { _count: { source: 'desc' } },
-        }),
-        prisma.source.count({ where: { isActive: true } }),
+        countArticles(),
+        getLatestFetchLog(),
+        listFetchLogs(10),
+        getCategoryBreakdown(),
+        getSourceBreakdown(),
+        countActiveSources(),
       ]);
 
     return NextResponse.json({
       totalArticles,
       lastFetch: lastLog?.timestamp ?? null,
       totalSources,
-      categoryBreakdown: categories.map((c: CategoryBreakdownItem) => ({
-        _id: c.category,
-        count: c._count.category,
+      categoryBreakdown: categories.map((category) => ({
+        _id: category.category,
+        count: category.count,
       })),
-      sourceBreakdown: sources.map((s: SourceBreakdownItem) => ({
-        _id: s.source,
-        count: s._count.source,
+      sourceBreakdown: sources.map((source) => ({
+        _id: source.source,
+        count: source.count,
       })),
-      recentLogs: recentLogs.map((l: RecentLogItem) => ({
-        timestamp: l.timestamp,
-        totalNew: l.totalNew,
-        errors: l.errors,
+      recentLogs: recentLogs.map((log) => ({
+        timestamp: log.timestamp,
+        totalNew: log.totalNew,
+        errors: log.errors,
         results: (() => {
-          try { return JSON.parse(l.results); } catch { return []; }
+          try {
+            return JSON.parse(log.results);
+          } catch {
+            return [];
+          }
         })(),
       })),
     });

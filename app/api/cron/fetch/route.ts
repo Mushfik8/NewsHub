@@ -5,7 +5,7 @@
  * 1. Vercel Cron Job → GET request with Authorization: Bearer <CRON_SECRET> header
  * 2. Admin manual trigger → POST request with valid admin_token cookie
  *
- * Force Node.js runtime — Prisma cannot run in Edge.
+ * Force Node.js runtime for RSS fetching and SQL access.
  */
 export const runtime = 'nodejs';
 export const maxDuration = 60; // 60s timeout for Vercel Hobby plan (paid plans can set higher)
@@ -15,12 +15,10 @@ import { runFetchJob } from '@/lib/rss';
 import { verifyToken } from '@/lib/auth';
 
 async function handleFetch(request: NextRequest) {
-  // Check 1: Admin cookie (manual trigger from dashboard)
   const token = request.cookies.get('admin_token')?.value;
   const isAdmin = token ? !!(await verifyToken(token)) : false;
 
   if (!isAdmin) {
-    // Check 2: Cron secret header (Vercel scheduled cron)
     const authHeader = request.headers.get('authorization');
     const cronSecret = process.env.CRON_SECRET;
     if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
@@ -45,12 +43,10 @@ async function handleFetch(request: NextRequest) {
   }
 }
 
-// Vercel Cron calls GET
 export async function GET(request: NextRequest) {
   return handleFetch(request);
 }
 
-// Admin dashboard calls POST
 export async function POST(request: NextRequest) {
   return handleFetch(request);
 }

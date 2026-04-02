@@ -1,63 +1,180 @@
 # NewsHub BD
 
-A simple, fast, and local Bangla news aggregator built with **Next.js 14, Tailwind CSS, and SQLite (Prisma)**. 
+NewsHub BD is a Bangla news aggregator built with Next.js and a simple SQL data layer.
 
-No complex cloud databases or Redis instances are required. Everything runs locally out-of-the-box!
+The project now uses:
 
-## 🚀 Features
-- 📰 Automated RSS Aggregation (BBC Bangla, Prothom Alo, etc.)
-- ⚡ **Local SQLite Database** (Zero cloud setup!)
-- 🔐 Secure Admin Dashboard (Email + Password + JWT cookies)
-- 🌙 Dark Mode & Bookmarks
-- 📱 Mobile-First Responsive UI
-- 📊 Fully-functional Admin Panel with Fetch Logs
+- Local SQLite automatically in development
+- Remote libSQL/Turso in production if you set a database URL
+- Plain SQL queries through `@libsql/client`
+- Built-in admin login, RSS fetch, source management, and AdSense-ready ad slots
 
----
+## Quick Start
 
-## 🛠️ 1-Minute Local Setup
+1. Install packages:
 
-Follow these exact steps to run the application on your computer:
-
-### 1. Install Packages
 ```bash
 npm install
 ```
 
-### 2. Generate the Local Database
-We use Prisma ORM to create a local SQLite database (`dev.db`).
+2. Create your env file:
+
 ```bash
-npx prisma db push --accept-data-loss
+cp .env.example .env.local
 ```
 
-### 3. Seed Default Data
-Seed the database with the default Admin account and some mock Bengali news articles so the homepage isn't empty:
-```bash
-node prisma/seed.js
-```
+3. Start the app:
 
-### 4. Start the Server
 ```bash
 npm run dev
 ```
 
-Open **[http://localhost:3000](http://localhost:3000)** to see the website!
+4. Open `http://localhost:3000`
 
----
+5. Open `http://localhost:3000/admin`
 
-## 🔐 Admin Dashboard
+Local development automatically creates the database at `data/news.db`.
 
-To access the admin panel and manually trigger the RSS scraper to fetch real news:
+If you do not set admin credentials in `.env.local`, local development falls back to:
 
-1. Go to **[http://localhost:3000/admin](http://localhost:3000/admin)**
-2. Default Email: `admin@example.com`
-3. Default Password: `admin123`
+- Email: `admin@example.com`
+- Password: `admin123`
 
-Inside the dashboard, click **"এখনই ফেচ করুন" (Fetch Now)** to pull down the latest real news from the connected RSS feeds straight into your SQLite database.
+After login, click `Fetch Now` in the admin panel to pull real RSS news into the database.
 
----
+## Environment Variables
 
-## 📡 Managing RSS Sources
-You can easily add new TV channels or Newspapers by modifying the default sources inside `prisma/seed.js` and running the seed command again, or you can build out a UI in the admin panel to do it dynamically.
+Use `.env.example` as the template.
 
-## ⚖️ Legal
-This platform aggregates publicly available RSS feeds. All articles redirect to original publishers. No content is scraped without attribution.
+Required:
+
+- `JWT_SECRET`
+- `CRON_SECRET`
+- `NEXT_PUBLIC_SITE_URL`
+
+Recommended:
+
+- `ADMIN_EMAIL`
+- `ADMIN_PASSWORD`
+- `ADMIN_NAME`
+
+Optional database variables:
+
+- `DATABASE_URL`
+- `DATABASE_AUTH_TOKEN`
+
+Backward-compatible aliases also work:
+
+- `TURSO_DATABASE_URL`
+- `TURSO_AUTH_TOKEN`
+
+## How The APIs Connect
+
+- `/api/news`
+  Returns paginated articles for the homepage, category pages, search, and source pages.
+
+- `/api/news/[slug]`
+  Returns one article for the article details page and increments its view count.
+
+- `/api/categories`
+  Returns unique categories for filtering.
+
+- `/api/sources`
+  Returns active news sources for the frontend.
+
+- `/api/admin/login`
+  Verifies admin email and password, then sets the `admin_token` cookie.
+
+- `/api/admin/stats`
+  Powers the admin dashboard cards, charts, and fetch logs.
+
+- `/api/admin/sources`
+  Lets you add, edit, enable, disable, or delete RSS sources.
+
+- `/api/admin/articles`
+  Lists articles for admin management and supports deletion.
+
+- `/api/cron/fetch`
+  Runs the RSS importer.
+  You can call it in two ways:
+  - From the admin panel after logging in
+  - From a cron job with `Authorization: Bearer <CRON_SECRET>`
+
+## Database Modes
+
+### Local development
+
+If `DATABASE_URL` and `TURSO_DATABASE_URL` are empty, the app uses:
+
+- `data/news.db`
+
+Tables are created automatically on startup.
+
+### Production deployment
+
+For real deployment, use a remote libSQL/Turso database so your data does not disappear between deploys.
+
+Set:
+
+- `DATABASE_URL=libsql://...`
+- `DATABASE_AUTH_TOKEN=...`
+
+You can also keep using:
+
+- `TURSO_DATABASE_URL`
+- `TURSO_AUTH_TOKEN`
+
+## Deploy To Vercel
+
+1. Push the project to GitHub.
+2. Import the repo into Vercel.
+3. Add these environment variables in Vercel:
+   - `NEXT_PUBLIC_SITE_URL`
+   - `JWT_SECRET`
+   - `CRON_SECRET`
+   - `ADMIN_EMAIL`
+   - `ADMIN_PASSWORD`
+   - `ADMIN_NAME`
+   - `DATABASE_URL`
+   - `DATABASE_AUTH_TOKEN`
+4. Deploy.
+
+If you use Vercel Cron, point it to:
+
+- `/api/cron/fetch`
+
+And send:
+
+- `Authorization: Bearer <CRON_SECRET>`
+
+## Google AdSense
+
+The easiest setup is Auto ads.
+
+Set:
+
+- `NEXT_PUBLIC_ADSENSE_CLIENT`
+
+Then turn on Auto ads inside AdSense.
+
+If you want fixed ad positions inside the layout, also set:
+
+- `NEXT_PUBLIC_ADSENSE_SLOT`
+
+Optional per-slot overrides:
+
+- `NEXT_PUBLIC_ADSENSE_SLOT_BANNER`
+- `NEXT_PUBLIC_ADSENSE_SLOT_RECTANGLE`
+- `NEXT_PUBLIC_ADSENSE_SLOT_SIDEBAR`
+
+If no AdSense client is set, the app shows safe placeholder ad boxes instead.
+
+## RSS Sources
+
+You can manage sources from the admin dashboard with the `/api/admin/sources` API.
+
+The app also includes fallback default sources in `lib/sources.ts` so the site still works on a fresh install.
+
+## Legal
+
+This platform aggregates public RSS feeds and links users back to the original publishers.

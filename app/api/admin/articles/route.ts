@@ -1,11 +1,11 @@
 /**
  * GET /api/admin/articles — List articles for admin dashboard
- * Force Node.js runtime — Prisma requires Node.js
+ * Force Node.js runtime for SQL access.
  */
 export const runtime = 'nodejs';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { deleteArticle, listArticles } from '@/lib/db';
 
 type AdminArticleListItem = {
   id: string;
@@ -13,7 +13,7 @@ type AdminArticleListItem = {
   slug: string;
   source: string;
   views: number;
-  publishedAt: Date;
+  publishedAt: string;
   category: string;
   originalLink: string;
 };
@@ -25,27 +25,16 @@ export async function GET(request: NextRequest) {
     const limit = Math.min(50, parseInt(searchParams.get('limit') ?? '20', 10));
     const skip = (page - 1) * limit;
 
-    const [articles, total] = await Promise.all([
-      prisma.article.findMany({
-        orderBy: { publishedAt: 'desc' },
-        take: limit,
-        skip,
-        select: {
-          id: true,
-          title: true,
-          slug: true,
-          source: true,
-          views: true,
-          publishedAt: true,
-          category: true,
-          originalLink: true,
-        },
-      }),
-      prisma.article.count(),
-    ]);
+    const { items: articles, total } = await listArticles({
+      limit,
+      offset: skip,
+    });
 
     return NextResponse.json({
-      articles: articles.map((a: AdminArticleListItem) => ({ ...a, _id: a.id })),
+      articles: articles.map((article: AdminArticleListItem) => ({
+        ...article,
+        _id: article.id,
+      })),
       total,
       page,
       pages: Math.ceil(total / limit),
@@ -62,9 +51,13 @@ export async function DELETE(request: NextRequest) {
     if (!id) {
       return NextResponse.json({ error: 'ID দিন' }, { status: 400 });
     }
-    await prisma.article.delete({ where: { id } });
+
+    await deleteArticle(id);
     return NextResponse.json({ success: true });
   } catch (error: any) {
+    if (error.code === 'NOT_FOUND') {
+      return NextResponse.json({ error: 'Article not found' }, { status: 404 });
+    }
     console.error('[Delete Article Error]', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

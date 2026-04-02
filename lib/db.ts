@@ -407,7 +407,7 @@ export async function listArticles(filters: ListArticlesInput = {}) {
             ${whereSql}
           )
           WHERE "_rank" <= ?
-          ORDER BY "publishedAt" DESC, "id" DESC
+          ORDER BY "publishedAt" DESC, "createdAt" DESC, "id" DESC
           LIMIT ? OFFSET ?
         `,
         [...args, filters.rankLimit, limit, offset]
@@ -436,7 +436,7 @@ export async function listArticles(filters: ListArticlesInput = {}) {
       `
         SELECT * FROM "Article"
         ${whereSql}
-        ORDER BY "publishedAt" DESC, "id" DESC
+        ORDER BY "publishedAt" DESC, "createdAt" DESC, "id" DESC
         LIMIT ? OFFSET ?
       `,
       [...args, limit, offset]

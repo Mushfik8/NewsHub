@@ -17,8 +17,8 @@ export async function GET(request: NextRequest) {
       query: q || undefined,
       limit,
       offset: skip,
-      // Diversity: Limit to 3 articles per source on the home page (when not filtering by source)
-      rankLimit: source ? undefined : 3, 
+      // Diversity: Limit to 50 articles per source on the home page (when not filtering by source)
+      rankLimit: source ? undefined : 50, 
     });
 
     return NextResponse.json({

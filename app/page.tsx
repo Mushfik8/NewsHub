@@ -58,7 +58,7 @@ export default function HomePage() {
   const fetchArticles = useCallback(async (cat: string, pg: number, append = false) => {
     if (!append) setLoading(true); else setLoadingMore(true);
     try {
-      const params = new URLSearchParams({ page: String(pg), limit: '15' });
+      const params = new URLSearchParams({ page: String(pg), limit: '20' });
       if (cat && cat !== 'সব') params.set('category', cat);
       const res = await fetch(`/api/news?${params}`);
       const data = await res.json();
@@ -108,6 +108,7 @@ export default function HomePage() {
   };
 
   const handleLoadMore = () => {
+    if (loadingMore || !pagination?.hasNext) return;
     const next = page + 1;
     setPage(next);
     fetchArticles(activeCategory, next, true);

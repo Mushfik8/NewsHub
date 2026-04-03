@@ -402,7 +402,7 @@ export async function listArticles(filters: ListArticlesInput = {}) {
       execute(
         `
           SELECT * FROM (
-            SELECT *, ROW_NUMBER() OVER (PARTITION BY "sourceSlug" ORDER BY "publishedAt" DESC) as "_rank"
+            SELECT *, ROW_NUMBER() OVER (PARTITION BY "sourceSlug" ORDER BY "publishedAt" DESC, "createdAt" DESC, "id" DESC) as "_rank"
             FROM "Article"
             ${whereSql}
           )
@@ -415,7 +415,7 @@ export async function listArticles(filters: ListArticlesInput = {}) {
       execute(
         `
           SELECT COUNT(*) AS count FROM (
-            SELECT ROW_NUMBER() OVER (PARTITION BY "sourceSlug") as "_rank"
+            SELECT ROW_NUMBER() OVER (PARTITION BY "sourceSlug" ORDER BY "publishedAt" DESC, "createdAt" DESC, "id" DESC) as "_rank"
             FROM "Article"
             ${whereSql}
           ) WHERE "_rank" <= ?

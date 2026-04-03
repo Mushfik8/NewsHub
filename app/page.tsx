@@ -63,7 +63,13 @@ export default function HomePage() {
       const res = await fetch(`/api/news?${params}`);
       const data = await res.json();
       const newArticles = data.articles || [];
-      setArticles((prev) => append ? [...prev, ...newArticles] : newArticles);
+      setArticles((prev) => {
+        const combined = append ? [...prev, ...newArticles] : newArticles;
+        const unique = combined.filter((v: Article, i: number, a: Article[]) => 
+          a.findIndex((t: Article) => t._id === v._id) === i
+        );
+        return unique;
+      });
       setPagination(data.pagination);
     } catch {/**/} finally {
       setLoading(false);

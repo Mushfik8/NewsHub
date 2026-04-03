@@ -28,7 +28,12 @@ export default function CategoryPage() {
       const res = await fetch(`/api/news?category=${encodeURIComponent(category)}&page=${pg}&limit=20`);
       const data = await res.json();
       const newArticles = data.articles || [];
-      setArticles((prev) => append ? [...prev, ...newArticles] : newArticles);
+      setArticles((prev) => {
+        const combined = append ? [...prev, ...newArticles] : newArticles;
+        return combined.filter((v: Article, i: number, a: Article[]) => 
+          a.findIndex((t: Article) => t._id === v._id) === i
+        );
+      });
       setHasNext(data.pagination?.hasNext || false);
     } catch {/**/} finally { setLoading(false); setLoadingMore(false); }
   }, [category]);

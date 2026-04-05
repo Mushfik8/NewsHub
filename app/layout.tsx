@@ -136,6 +136,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="bn" suppressHydrationWarning>
       <head>
+        <meta name="google-adsense-account" content="ca-pub-4031452060439748" />
+        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4031452060439748" crossOrigin="anonymous"></script>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
@@ -153,14 +155,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </main>
           <Footer />
         </ThemeProvider>
-
-        <Script
-          id="adsense-script"
-          async
-          strategy="afterInteractive"
-          crossOrigin="anonymous"
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4031452060439748"
-        />
 
         {googleAnalyticsId && (
           <>

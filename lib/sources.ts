@@ -43,7 +43,7 @@ export const DEFAULT_SOURCES: FeedSource[] = [
   {
     name: 'বিডিনিউজ২৪',
     slug: 'bdnews24',
-    feedUrl: 'https://bangla.bdnews24.com/rss.xml',
+    feedUrl: 'https://bangla.bdnews24.com/rss/rss.xml',
     siteUrl: 'https://bangla.bdnews24.com',
     defaultCategory: 'বাংলাদেশ',
     language: 'bn',

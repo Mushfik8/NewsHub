@@ -21,15 +21,22 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-700 transition-colors duration-300">
-      {/* Top Bar */}
-      <div className="bg-blue-700 text-white text-xs py-1.5 text-center">
-        📰 সর্বশেষ বাংলা সংবাদ – BBC Bangla, Prothom Alo, Somoy TV ও আরও অনেক সূত্র থেকে
+      {/* Safe-area spacer — fills the area behind camera hole / Dynamic Island / status bar */}
+      <div
+        className="bg-blue-700 w-full"
+        style={{ height: 'env(safe-area-inset-top, 0px)' }}
+        aria-hidden="true"
+      />
+
+      {/* Top info bar */}
+      <div className="bg-blue-700 text-white text-xs py-1.5 text-center px-4">
+        📰 সর্বশেষ বাংলা সংবাদ – BBC Bangla, Prothom Alo ও আরও অনেক সূত্র
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="flex items-center justify-between h-16 gap-4">
+        <div className="flex items-center justify-between h-14 sm:h-16 gap-3">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 flex-shrink-0 group">
+          <Link href="/" className="flex items-center gap-2 flex-shrink-0 group min-h-[48px]">
             <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
               <Newspaper className="w-5 h-5 text-white" />
             </div>
@@ -45,7 +52,7 @@ export default function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className="px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
+                className="px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors min-h-[44px] flex items-center"
               >
                 {link.label}
               </Link>
@@ -53,7 +60,7 @@ export default function Navbar() {
           </nav>
 
           {/* Right Actions */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
             {/* Search */}
             <form
               onSubmit={(e) => {
@@ -75,8 +82,9 @@ export default function Navbar() {
             {/* Bookmarks */}
             <Link
               href="/bookmarks"
-              className="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+              className="p-2.5 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
               title="বুকমার্ক"
+              aria-label="Bookmarks"
             >
               <Bookmark className="w-5 h-5" />
             </Link>
@@ -85,7 +93,7 @@ export default function Navbar() {
             <button
               onClick={toggle}
               aria-label="Toggle dark mode"
-              className="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+              className="p-2.5 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
             >
               {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </button>
@@ -93,7 +101,8 @@ export default function Navbar() {
             {/* Hamburger */}
             <button
               onClick={() => setMenuOpen(!menuOpen)}
-              className="lg:hidden p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+              aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+              className="lg:hidden p-2.5 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
             >
               {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
@@ -107,9 +116,12 @@ export default function Navbar() {
             <form
               onSubmit={(e) => {
                 e.preventDefault();
-                if (searchQuery.trim()) window.location.href = `/search?q=${encodeURIComponent(searchQuery)}`;
+                if (searchQuery.trim()) {
+                  window.location.href = `/search?q=${encodeURIComponent(searchQuery)}`;
+                  setMenuOpen(false);
+                }
               }}
-              className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg px-3 py-2 gap-2 mb-3"
+              className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg px-3 py-2.5 gap-2 mb-3"
             >
               <Search className="w-4 h-4 text-slate-400" />
               <input
@@ -125,7 +137,7 @@ export default function Navbar() {
                 key={link.href}
                 href={link.href}
                 onClick={() => setMenuOpen(false)}
-                className="block px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
+                className="block px-3 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors min-h-[44px] flex items-center"
               >
                 {link.label}
               </Link>

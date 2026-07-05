@@ -1,7 +1,11 @@
 import Link from 'next/link';
 import { Newspaper, ExternalLink } from 'lucide-react';
+import { DEFAULT_SOURCES, CATEGORIES } from '@/lib/sources';
 
 export default function Footer() {
+  // Use categories without 'সব'
+  const footerCategories = CATEGORIES.filter((c) => c !== 'সব');
+
   return (
     <footer className="bg-slate-900 dark:bg-slate-950 text-slate-400 mt-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
@@ -19,11 +23,11 @@ export default function Footer() {
             </p>
           </div>
 
-          {/* Categories */}
+          {/* Categories — dynamically from CATEGORIES */}
           <div>
             <h3 className="text-white font-semibold mb-4">বিভাগ</h3>
             <ul className="space-y-2 text-sm">
-              {['বাংলাদেশ', 'আন্তর্জাতিক', 'রাজনীতি', 'খেলাধুলা', 'বিনোদন', 'প্রযুক্তি'].map((cat) => (
+              {footerCategories.map((cat) => (
                 <li key={cat}>
                   <Link href={`/category/${encodeURIComponent(cat)}`} className="hover:text-blue-400 transition-colors">
                     {cat}
@@ -33,17 +37,11 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Sources */}
+          {/* Sources — dynamically from DEFAULT_SOURCES */}
           <div>
             <h3 className="text-white font-semibold mb-4">সংবাদ সূত্র</h3>
             <ul className="space-y-2 text-sm">
-              {[
-                { name: 'BBC বাংলা', slug: 'bbc-bangla' },
-                { name: 'প্রথম আলো', slug: 'prothom-alo' },
-                { name: 'সময় টিভি', slug: 'somoy-tv' },
-                { name: 'যুগান্তর', slug: 'jugantor' },
-                { name: 'বিডিনিউজ২৪', slug: 'bdnews24' },
-              ].map((src) => (
+              {DEFAULT_SOURCES.map((src) => (
                 <li key={src.slug}>
                   <Link href={`/source/${src.slug}`} className="hover:text-blue-400 transition-colors flex items-center gap-1">
                     <ExternalLink className="w-3 h-3" />

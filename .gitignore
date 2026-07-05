@@ -26,16 +26,25 @@ yarn-error.log*
 .next-start.log
 .next-start.err.log
 
+# log files
+*.log
+
 # local env files
 .env*.local
 .env
+.env.local.bak
 
 # local databases
+*.db
+*.db-*
 /data/news.db
 /data/news.db-*
 /prisma/dev.db
 /prisma/dev.db-journal
-/test.db
+
+# legacy leftovers
+mongodbExample.js
+prisma-error*.log
 
 # vercel
 .vercel

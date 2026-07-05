@@ -10,13 +10,15 @@ import {
   countArticles,
   getCategoryBreakdown,
   getLatestFetchLog,
+  getPerSourceArticleCounts,
   getSourceBreakdown,
   listFetchLogs,
+  listSourceHealth,
 } from '@/lib/db';
 
 export async function GET() {
   try {
-    const [totalArticles, lastLog, recentLogs, categories, sources, totalSources] =
+    const [totalArticles, lastLog, recentLogs, categories, sources, totalSources, sourceHealth, perSourceCounts] =
       await Promise.all([
         countArticles(),
         getLatestFetchLog(),
@@ -24,6 +26,8 @@ export async function GET() {
         getCategoryBreakdown(),
         getSourceBreakdown(),
         countActiveSources(),
+        listSourceHealth(),
+        getPerSourceArticleCounts(),
       ]);
 
     return NextResponse.json({
@@ -49,6 +53,21 @@ export async function GET() {
             return [];
           }
         })(),
+      })),
+      sourceHealth: sourceHealth.map((sh) => ({
+        sourceSlug: sh.sourceSlug,
+        lastSuccessAt: sh.lastSuccessAt,
+        lastErrorAt: sh.lastErrorAt,
+        lastError: sh.lastError,
+        articleCount: sh.articleCount,
+        consecutiveFailures: sh.consecutiveFailures,
+        updatedAt: sh.updatedAt,
+      })),
+      perSourceCounts: perSourceCounts.map((psc) => ({
+        sourceSlug: psc.sourceSlug,
+        source: psc.source,
+        count: psc.count,
+        latestAt: psc.latestAt,
       })),
     });
   } catch (error: any) {

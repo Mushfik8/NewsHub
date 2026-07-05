@@ -1,7 +1,28 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { RefreshCw, BarChart3, Newspaper, Clock, AlertCircle, CheckCircle, Lock } from 'lucide-react';
+import {
+  RefreshCw, BarChart3, Newspaper, Clock, AlertCircle,
+  CheckCircle, Lock, Activity, Shield, ShieldAlert,
+  ShieldCheck, TrendingUp, XCircle,
+} from 'lucide-react';
+
+interface SourceHealthItem {
+  sourceSlug: string;
+  lastSuccessAt: string | null;
+  lastErrorAt: string | null;
+  lastError: string | null;
+  articleCount: number;
+  consecutiveFailures: number;
+  updatedAt: string;
+}
+
+interface PerSourceCount {
+  sourceSlug: string;
+  source: string;
+  count: number;
+  latestAt: string | null;
+}
 
 interface Stats {
   totalArticles: number;
@@ -9,7 +30,34 @@ interface Stats {
   totalSources: number;
   categoryBreakdown: Array<{ _id: string; count: number }>;
   sourceBreakdown: Array<{ _id: string; count: number }>;
-  recentLogs: Array<{ timestamp: string; totalNew: number; results: any[] }>;
+  recentLogs: Array<{ timestamp: string; totalNew: number; errors: number; results: any[] }>;
+  sourceHealth: SourceHealthItem[];
+  perSourceCounts: PerSourceCount[];
+}
+
+function getHealthStatus(health: SourceHealthItem): { label: string; color: string; icon: typeof ShieldCheck } {
+  if (health.consecutiveFailures >= 5) {
+    return { label: 'অকার্যকর', color: 'text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30', icon: XCircle };
+  }
+  if (health.consecutiveFailures >= 2) {
+    return { label: 'সতর্কতা', color: 'text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30', icon: ShieldAlert };
+  }
+  if (health.lastSuccessAt) {
+    return { label: 'সক্রিয়', color: 'text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30', icon: ShieldCheck };
+  }
+  return { label: 'অজানা', color: 'text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-700', icon: Shield };
+}
+
+function formatBnDate(dateStr: string | null): string {
+  if (!dateStr) return 'কখনো নয়';
+  try {
+    return new Date(dateStr).toLocaleString('bn-BD', {
+      dateStyle: 'short',
+      timeStyle: 'short',
+    });
+  } catch {
+    return dateStr;
+  }
 }
 
 export default function AdminPage() {
@@ -21,6 +69,9 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
   const [fetchResult, setFetchResult] = useState<string>('');
+  const [verifyUrl, setVerifyUrl] = useState('');
+  const [verifying, setVerifying] = useState(false);
+  const [verifyResult, setVerifyResult] = useState<any>(null);
 
   const login = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,17 +102,32 @@ export default function AdminPage() {
     setFetching(true);
     setFetchResult('');
     try {
-      const res = await fetch('/api/cron/fetch', {
-        method: 'POST',
-        // The API cron route will need to be refactored to allow UI triggers if env secret isn't available.
-        // For now, let's keep it as is, or we can just send an empty body since it's locally driven
-      });
+      const res = await fetch('/api/cron/fetch', { method: 'POST' });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed');
       setFetchResult(`✅ ${data.message || 'সফল'}`);
       fetchStats();
     } catch (err: any) { setFetchResult(`❌ ফেচ করতে ব্যর্থ হয়েছে: ${err.message}`); }
     finally { setFetching(false); }
+  };
+
+  const handleVerifyFeed = async () => {
+    if (!verifyUrl.trim()) return;
+    setVerifying(true);
+    setVerifyResult(null);
+    try {
+      const res = await fetch('/api/admin/verify-feed', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: verifyUrl }),
+      });
+      const data = await res.json();
+      setVerifyResult(data);
+    } catch (err: any) {
+      setVerifyResult({ ok: false, error: err.message });
+    } finally {
+      setVerifying(false);
+    }
   };
 
   if (!authed) {
@@ -100,7 +166,7 @@ export default function AdminPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
         <div>
           <h1 className="text-3xl font-black text-slate-900 dark:text-slate-100 flex items-center gap-3">
             <BarChart3 className="w-8 h-8 text-blue-600" />
@@ -108,7 +174,7 @@ export default function AdminPage() {
           </h1>
           <p className="text-slate-500 dark:text-slate-400 mt-1">NewsHub BD পরিচালনা কেন্দ্র</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-3 flex-wrap">
           <button onClick={async () => {
             await fetch('/api/admin/logout', { method: 'POST' });
             setAuthed(false);
@@ -159,12 +225,113 @@ export default function AdminPage() {
                 <CheckCircle className="w-8 h-8 text-purple-600" />
                 <div>
                   <p className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                    {stats.lastFetch ? new Date(stats.lastFetch).toLocaleString('bn-BD') : 'কখনো নয়'}
+                    {stats.lastFetch ? formatBnDate(stats.lastFetch) : 'কখনো নয়'}
                   </p>
                   <p className="text-slate-500 dark:text-slate-400 text-sm">শেষ আপডেট</p>
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Source Health Panel */}
+          {stats.sourceHealth && stats.sourceHealth.length > 0 && (
+            <div className="card p-6 mb-8">
+              <h2 className="section-title mb-4">
+                <Activity className="w-5 h-5 text-blue-500" />
+                সূত্র স্বাস্থ্য পরিদর্শন
+              </h2>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-left text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
+                      <th className="pb-3 font-semibold">সূত্র</th>
+                      <th className="pb-3 font-semibold">অবস্থা</th>
+                      <th className="pb-3 font-semibold">শেষ সফল ফেচ</th>
+                      <th className="pb-3 font-semibold">মোট সংবাদ</th>
+                      <th className="pb-3 font-semibold">শেষ ত্রুটি</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+                    {stats.sourceHealth.map((sh) => {
+                      const status = getHealthStatus(sh);
+                      const StatusIcon = status.icon;
+                      // Try to find the display name from perSourceCounts
+                      const psc = stats.perSourceCounts?.find((p) => p.sourceSlug === sh.sourceSlug);
+                      const displayName = psc?.source || sh.sourceSlug;
+
+                      return (
+                        <tr key={sh.sourceSlug} className="text-slate-700 dark:text-slate-300">
+                          <td className="py-3 font-medium">{displayName}</td>
+                          <td className="py-3">
+                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium ${status.color}`}>
+                              <StatusIcon className="w-3.5 h-3.5" />
+                              {status.label}
+                            </span>
+                          </td>
+                          <td className="py-3 text-xs">{formatBnDate(sh.lastSuccessAt)}</td>
+                          <td className="py-3">
+                            <span className="badge-green">{sh.articleCount}</span>
+                          </td>
+                          <td className="py-3 text-xs max-w-[200px] truncate text-slate-400" title={sh.lastError || ''}>
+                            {sh.lastError ? (
+                              <span className="text-red-500 dark:text-red-400">{sh.lastError}</span>
+                            ) : (
+                              <span className="text-green-500">—</span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Feed Verifier */}
+          <div className="card p-6 mb-8">
+            <h2 className="section-title mb-4">
+              <TrendingUp className="w-5 h-5 text-purple-500" />
+              ফিড যাচাইকরণ
+            </h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-3">
+              নতুন সূত্র যোগ করার আগে ফিড URL যাচাই করুন।
+            </p>
+            <div className="flex gap-2">
+              <input
+                type="url"
+                value={verifyUrl}
+                onChange={(e) => setVerifyUrl(e.target.value)}
+                placeholder="https://example.com/rss.xml"
+                className="flex-1 px-4 py-2.5 bg-slate-100 dark:bg-slate-700 rounded-lg text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 outline-none focus:ring-2 ring-blue-500"
+              />
+              <button onClick={handleVerifyFeed} disabled={verifying} className="btn-primary whitespace-nowrap">
+                {verifying ? 'যাচাই হচ্ছে...' : 'যাচাই করুন'}
+              </button>
+            </div>
+            {verifyResult && (
+              <div className={`mt-4 p-4 rounded-lg border text-sm ${verifyResult.ok ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'}`}>
+                <p className="font-semibold mb-2">
+                  {verifyResult.ok ? '✅ ফিড সক্রিয়' : '❌ ফিড সমস্যাযুক্ত'}
+                  {verifyResult.feedTitle && ` — ${verifyResult.feedTitle}`}
+                </p>
+                {verifyResult.ok && (
+                  <div className="space-y-1 text-slate-600 dark:text-slate-300">
+                    <p>আইটেম সংখ্যা: <strong>{verifyResult.itemCount}</strong></p>
+                    {verifyResult.latestDate && (
+                      <p>সর্বশেষ প্রকাশ: <strong>{formatBnDate(verifyResult.latestDate)}</strong></p>
+                    )}
+                    <p>ছবি আছে: <strong>{verifyResult.hasImages ? 'হ্যাঁ' : 'না'}</strong></p>
+                    {verifyResult.sampleCategories?.length > 0 && (
+                      <p>বিভাগ: <span className="text-xs">{verifyResult.sampleCategories.join(', ')}</span></p>
+                    )}
+                  </div>
+                )}
+                {verifyResult.error && (
+                  <p className="text-red-600 dark:text-red-400 mt-1">{verifyResult.error}</p>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
@@ -177,7 +344,7 @@ export default function AdminPage() {
                     <span className="text-sm text-slate-600 dark:text-slate-300 w-28 flex-shrink-0">{c._id}</span>
                     <div className="flex-1 bg-slate-100 dark:bg-slate-700 rounded-full h-2">
                       <div
-                        className="bg-blue-500 h-2 rounded-full"
+                        className="bg-blue-500 h-2 rounded-full transition-all duration-500"
                         style={{ width: `${Math.min(100, (c.count / stats.totalArticles) * 100 * 5)}%` }}
                       />
                     </div>
@@ -196,7 +363,7 @@ export default function AdminPage() {
                     <span className="text-sm text-slate-600 dark:text-slate-300 w-32 flex-shrink-0 truncate">{s._id}</span>
                     <div className="flex-1 bg-slate-100 dark:bg-slate-700 rounded-full h-2">
                       <div
-                        className="bg-green-500 h-2 rounded-full"
+                        className="bg-green-500 h-2 rounded-full transition-all duration-500"
                         style={{ width: `${Math.min(100, (s.count / stats.totalArticles) * 100 * 5)}%` }}
                       />
                     </div>
@@ -220,6 +387,7 @@ export default function AdminPage() {
                     <th className="pb-3 font-semibold">সময়</th>
                     <th className="pb-3 font-semibold">নতুন সংবাদ</th>
                     <th className="pb-3 font-semibold">ত্রুটি</th>
+                    <th className="pb-3 font-semibold">বিস্তারিত</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
@@ -227,7 +395,7 @@ export default function AdminPage() {
                     const errors = log.results.filter((r: any) => r.error).length;
                     return (
                       <tr key={i} className="text-slate-700 dark:text-slate-300">
-                        <td className="py-3">{new Date(log.timestamp).toLocaleString('bn-BD')}</td>
+                        <td className="py-3">{formatBnDate(log.timestamp)}</td>
                         <td className="py-3">
                           <span className="badge-green">+{log.totalNew}</span>
                         </td>
@@ -237,11 +405,18 @@ export default function AdminPage() {
                             : <span className="text-green-600 dark:text-green-400 text-xs">✓ সফল</span>
                           }
                         </td>
+                        <td className="py-3 text-xs text-slate-400 max-w-[300px]">
+                          {log.results.map((r: any, j: number) => (
+                            <span key={j} className={`inline-block mr-2 ${r.error ? 'text-red-400' : 'text-green-500'}`}>
+                              {r.source}: {r.error ? '✗' : `+${r.new}`}
+                            </span>
+                          ))}
+                        </td>
                       </tr>
                     );
                   })}
                   {stats.recentLogs.length === 0 && (
-                    <tr><td colSpan={3} className="py-6 text-center text-slate-400">কোনো লগ নেই</td></tr>
+                    <tr><td colSpan={4} className="py-6 text-center text-slate-400">কোনো লগ নেই</td></tr>
                   )}
                 </tbody>
               </table>

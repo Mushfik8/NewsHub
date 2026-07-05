@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { Fragment } from 'react';
 import NewsCard from '@/components/NewsCard';
 import { GridSkeleton, FeaturedCardSkeleton } from '@/components/Skeleton';
 import AdSlot from '@/components/AdSlot';
 import { BookmarkProvider } from '@/components/BookmarkProvider';
-import { TrendingUp, RefreshCw, Flame } from 'lucide-react';
+import { TrendingUp, RefreshCw, Flame, ArrowDown } from 'lucide-react';
 import { CATEGORIES, DEFAULT_SOURCES } from '@/lib/sources';
 
 interface Article {
@@ -43,6 +43,7 @@ const sourceDotColors = [
   'bg-purple-500',
   'bg-cyan-500',
   'bg-pink-500',
+  'bg-amber-500',
 ];
 
 export default function HomePage() {
@@ -54,6 +55,7 @@ export default function HomePage() {
   const [activeCategory, setActiveCategory] = useState('সব');
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [page, setPage] = useState(1);
+  const [refreshing, setRefreshing] = useState(false);
 
   const fetchArticles = useCallback(async (cat: string, pg: number, append = false) => {
     if (!append) setLoading(true); else setLoadingMore(true);
@@ -114,6 +116,16 @@ export default function HomePage() {
     fetchArticles(activeCategory, next, true);
   };
 
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    setPage(1);
+    await Promise.all([
+      fetchArticles(activeCategory, 1),
+      fetchTrending(),
+    ]);
+    setRefreshing(false);
+  };
+
   const featured = articles.slice(0, 4);
   const rest = articles.slice(4);
 
@@ -124,16 +136,27 @@ export default function HomePage() {
 
         <div className="flex flex-col lg:flex-row gap-6">
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-5 overflow-x-auto scroll-hidden pb-1">
-              {CATEGORIES.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => handleCategoryChange(cat)}
-                  className={activeCategory === cat ? 'category-pill-active' : 'category-pill-inactive'}
-                >
-                  {cat}
-                </button>
-              ))}
+            {/* Category pills + refresh */}
+            <div className="flex items-center gap-2 mb-5">
+              <div className="flex-1 flex items-center gap-2 overflow-x-auto scroll-hidden pb-1">
+                {CATEGORIES.map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => handleCategoryChange(cat)}
+                    className={activeCategory === cat ? 'category-pill-active' : 'category-pill-inactive'}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={handleRefresh}
+                disabled={refreshing}
+                className="flex-shrink-0 p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+                aria-label="Refresh articles"
+              >
+                <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+              </button>
             </div>
 
             {loading ? (
@@ -179,9 +202,13 @@ export default function HomePage() {
                     <button
                       onClick={handleLoadMore}
                       disabled={loadingMore}
-                      className="btn-primary gap-2 px-8 py-3"
+                      className="btn-primary gap-2 px-8 py-3 min-h-[48px]"
                     >
-                      <RefreshCw className={`w-4 h-4 ${loadingMore ? 'animate-spin' : ''}`} />
+                      {loadingMore ? (
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <ArrowDown className="w-4 h-4" />
+                      )}
                       {loadingMore ? 'লোড হচ্ছে...' : 'আরও সংবাদ'}
                     </button>
                   </div>
@@ -218,7 +245,7 @@ export default function HomePage() {
                 <a
                   key={source.slug}
                   href={`/source/${source.slug}`}
-                  className="flex items-center gap-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-700/50 rounded-lg px-2 transition-colors group"
+                  className="flex items-center gap-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-700/50 rounded-lg px-2 transition-colors group min-h-[44px]"
                 >
                   <span
                     className={`w-2.5 h-2.5 rounded-full ${sourceDotColors[index % sourceDotColors.length]} flex-shrink-0`}

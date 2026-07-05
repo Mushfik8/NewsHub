@@ -4,7 +4,9 @@ import { notFound } from 'next/navigation';
 import { headers } from 'next/headers';
 import { ArrowLeft, Clock, ExternalLink, Share2 } from 'lucide-react';
 import { findArticleBySlug } from '@/lib/db';
-import { timeAgo } from '@/lib/utils';
+import { timeAgoBangla, toBanglaDigits, estimateReadTime } from '@/lib/utils';
+import RelatedArticles from './RelatedArticles';
+import FontSizeControl from './FontSizeControl';
 
 interface ArticlePageProps {
   params: Promise<{ slug: string }>;
@@ -67,6 +69,8 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   }
 
   const siteUrl = await getRequestSiteUrl();
+  const readTime = estimateReadTime(article.description);
+  const relativeTime = timeAgoBangla(article.publishedAt);
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -110,6 +114,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
           )}
 
           <div className="p-6 sm:p-8">
+            {/* Meta info */}
             <div className="flex flex-wrap items-center gap-3 mb-4">
               <Link href={`/category/${article.category}`}>
                 <span className="badge-blue">{article.category}</span>
@@ -118,13 +123,19 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                 href={`/source/${article.sourceSlug}`}
                 className="text-sm font-semibold text-blue-600 dark:text-blue-400 hover:underline"
               >
-                {article.source}
+                📰 {article.source}
               </Link>
               <span className="flex items-center gap-1 text-sm text-slate-400">
                 <Clock className="w-4 h-4" />
-                {timeAgo(article.publishedAt)}
+                {relativeTime}
+              </span>
+              <span className="text-sm text-slate-400">
+                ⏱ {toBanglaDigits(readTime)} মিনিট পড়া
               </span>
             </div>
+
+            {/* Font size control */}
+            <FontSizeControl />
 
             <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100 leading-tight mb-4">
               {article.title}
@@ -136,30 +147,41 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
               </p>
             )}
 
-            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4 mb-6">
-              <p className="text-sm text-amber-800 dark:text-amber-300">
-                সতর্কতা: এটি একটি সংক্ষিপ্ত প্রিভিউ। সম্পূর্ণ সংবাদ পড়তে নিচের বোতামে ক্লিক করে মূল সূত্রে যান।
+            {/* Original source CTA — prominent */}
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-5 mb-6">
+              <p className="text-sm text-blue-800 dark:text-blue-300 mb-3 font-medium">
+                পড়ুন মূল প্রতিবেদন — {article.source}
               </p>
-            </div>
-
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               <a
                 href={article.originalLink}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn-primary justify-center py-3 text-base font-semibold flex-1 sm:flex-none"
+                className="btn-primary justify-center py-3 text-base font-semibold w-full sm:w-auto"
               >
                 <ExternalLink className="w-5 h-5" />
-                {article.source}-এ সম্পূর্ণ সংবাদ পড়ুন
+                {article.source}-এ সম্পূর্ণ সংবাদ পড়ুন
               </a>
+            </div>
+
+            {/* Share */}
+            <div className="flex flex-col sm:flex-row gap-3 mb-6">
               <a
                 href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`${article.title} - ${siteUrl}/news/${article.slug}`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn-secondary justify-center py-3"
+                className="btn-secondary justify-center py-3 min-h-[48px]"
               >
                 <Share2 className="w-4 h-4" />
-                শেয়ার করুন
+                WhatsApp-এ শেয়ার করুন
+              </a>
+              <a
+                href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(`${siteUrl}/news/${article.slug}`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-secondary justify-center py-3 min-h-[48px]"
+              >
+                <Share2 className="w-4 h-4" />
+                Facebook-এ শেয়ার করুন
               </a>
             </div>
 
@@ -179,6 +201,9 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
             </div>
           </div>
         </article>
+
+        {/* Related Articles */}
+        <RelatedArticles category={article.category} excludeSlug={article.slug} />
       </div>
     </>
   );

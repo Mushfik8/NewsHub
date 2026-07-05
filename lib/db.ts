@@ -53,6 +53,16 @@ export interface FetchLogRecord {
   results: string;
 }
 
+export interface SourceHealthRecord {
+  sourceSlug: string;
+  lastSuccessAt: string | null;
+  lastErrorAt: string | null;
+  lastError: string | null;
+  articleCount: number;
+  consecutiveFailures: number;
+  updatedAt: string;
+}
+
 export interface ListArticlesInput {
   category?: string;
   sourceSlug?: string;
@@ -177,6 +187,16 @@ CREATE TABLE IF NOT EXISTS "FetchLog" (
   "totalNew" INTEGER NOT NULL,
   "errors" INTEGER NOT NULL DEFAULT 0,
   "results" TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS "SourceHealth" (
+  "sourceSlug" TEXT NOT NULL PRIMARY KEY,
+  "lastSuccessAt" TEXT,
+  "lastErrorAt" TEXT,
+  "lastError" TEXT,
+  "articleCount" INTEGER NOT NULL DEFAULT 0,
+  "consecutiveFailures" INTEGER NOT NULL DEFAULT 0,
+  "updatedAt" TEXT NOT NULL
 );
 
 CREATE INDEX IF NOT EXISTS "Article_publishedAt_idx" ON "Article" ("publishedAt");
@@ -791,4 +811,108 @@ export function getDatabaseMode() {
     url: databaseUrl,
     remote: usesRemoteDatabase,
   };
+}
+
+// ── SourceHealth ──────────────────────────────────────────────
+
+function mapSourceHealth(row: Row): SourceHealthRecord {
+  return {
+    sourceSlug: asString(row.sourceSlug),
+    lastSuccessAt: asNullableString(row.lastSuccessAt),
+    lastErrorAt: asNullableString(row.lastErrorAt),
+    lastError: asNullableString(row.lastError),
+    articleCount: asNumber(row.articleCount),
+    consecutiveFailures: asNumber(row.consecutiveFailures),
+    updatedAt: asString(row.updatedAt),
+  };
+}
+
+export async function upsertSourceHealth(
+  sourceSlug: string,
+  update: { success: boolean; error?: string; newArticles?: number }
+) {
+  const now = new Date().toISOString();
+
+  // Check if the record exists
+  const existing = await execute(
+    'SELECT * FROM "SourceHealth" WHERE "sourceSlug" = ? LIMIT 1',
+    [sourceSlug]
+  );
+
+  if (existing.rows.length === 0) {
+    // Insert new record
+    await execute(
+      `INSERT INTO "SourceHealth" (
+        "sourceSlug", "lastSuccessAt", "lastErrorAt", "lastError",
+        "articleCount", "consecutiveFailures", "updatedAt"
+      ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [
+        sourceSlug,
+        update.success ? now : null,
+        update.success ? null : now,
+        update.success ? null : (update.error ?? 'Unknown error'),
+        update.newArticles ?? 0,
+        update.success ? 0 : 1,
+        now,
+      ]
+    );
+  } else {
+    const currentHealth = mapSourceHealth(existing.rows[0]);
+    if (update.success) {
+      await execute(
+        `UPDATE "SourceHealth" SET
+          "lastSuccessAt" = ?,
+          "articleCount" = "articleCount" + ?,
+          "consecutiveFailures" = 0,
+          "updatedAt" = ?
+        WHERE "sourceSlug" = ?`,
+        [now, update.newArticles ?? 0, now, sourceSlug]
+      );
+    } else {
+      await execute(
+        `UPDATE "SourceHealth" SET
+          "lastErrorAt" = ?,
+          "lastError" = ?,
+          "consecutiveFailures" = ?,
+          "updatedAt" = ?
+        WHERE "sourceSlug" = ?`,
+        [
+          now,
+          update.error ?? 'Unknown error',
+          currentHealth.consecutiveFailures + 1,
+          now,
+          sourceSlug,
+        ]
+      );
+    }
+  }
+}
+
+export async function listSourceHealth(): Promise<SourceHealthRecord[]> {
+  const result = await execute(
+    'SELECT * FROM "SourceHealth" ORDER BY "updatedAt" DESC'
+  );
+  return result.rows.map(mapSourceHealth);
+}
+
+export async function getPerSourceArticleCounts(): Promise<
+  Array<{ sourceSlug: string; source: string; count: number; latestAt: string | null }>
+> {
+  const result = await execute(`
+    SELECT
+      "sourceSlug" AS sourceSlug,
+      "source" AS source,
+      COUNT(*) AS count,
+      MAX("publishedAt") AS latestAt
+    FROM "Article"
+    GROUP BY "sourceSlug"
+    ORDER BY count DESC
+  `);
+
+  return result.rows.map((row) => ({
+    sourceSlug: asString(row.sourceSlug),
+    source: asString(row.source),
+    count: asNumber(row.count),
+    latestAt: asNullableString(row.latestAt),
+  }));
 }

@@ -3,10 +3,8 @@
     "relation": ["delegate_permission/common.handle_all_urls"],
     "target": {
       "namespace": "android_app",
-      "package_name": "bd.newshub.app",
-      "sha256_cert_fingerprints": [
-        "REPLACE_WITH_YOUR_SHA256_FINGERPRINT"
-      ]
+      "package_name": "app.vercel.news_hub_bd.twa",
+      "sha256_cert_fingerprints": ["04:F5:B8:18:DB:AC:70:4A:9F:69:89:96:9B:97:FE:CF:B0:AE:B6:B8:92:E1:D4:77:81:8C:A7:92:4C:B5:91:49"]
     }
   }
 ]

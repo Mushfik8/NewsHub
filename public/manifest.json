@@ -1,6 +1,7 @@
 {
   "name": "NewsHub BD – বাংলা নিউজ",
   "short_name": "NewsHub BD",
+  "id": "/",
   "description": "বাংলাদেশ ও বিশ্বের সর্বশেষ সংবাদ। সকল শীর্ষ সংবাদমাধ্যমের খবর এক জায়গায়।",
   "start_url": "/",
   "scope": "/",

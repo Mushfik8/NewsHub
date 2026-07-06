@@ -48,7 +48,7 @@ html {
 }
 
 body {
-  font-family: 'Hind Siliguri', 'Inter', sans-serif;
+  font-family: 'SutonnyOMJ', 'SolaimanLipi', 'Kalpurush', 'Hind Siliguri', 'Inter', sans-serif;
   font-size: calc(16px * var(--font-size-scale));
   line-height: 1.7;
   background-color: var(--bg-primary);

@@ -11,12 +11,12 @@ export default function Navbar() {
   const [searchQuery, setSearchQuery] = useState('');
 
   const navLinks = [
-    { href: '/', label: 'হোম' },
-    { href: '/category/বাংলাদেশ', label: 'বাংলাদেশ' },
-    { href: '/category/আন্তর্জাতিক', label: 'আন্তর্জাতিক' },
-    { href: '/category/রাজনীতি', label: 'রাজনীতি' },
-    { href: '/category/খেলাধুলা', label: 'খেলাধুলা' },
-    { href: '/category/বিনোদন', label: 'বিনোদন' },
+    { href: '/', label: 'Home' },
+    { href: '/category/বাংলাদেশ', label: 'Bangladesh' },
+    { href: '/category/আন্তর্জাতিক', label: 'International' },
+    { href: '/category/রাজনীতি', label: 'Politics' },
+    { href: '/category/খেলাধুলা', label: 'Sports' },
+    { href: '/category/বিনোদন', label: 'Entertainment' },
   ];
 
   return (
@@ -30,7 +30,7 @@ export default function Navbar() {
 
       {/* Top info bar */}
       <div className="bg-blue-700 text-white text-xs py-1.5 text-center px-4">
-        📰 সর্বশেষ বাংলা সংবাদ – BBC Bangla, Prothom Alo ও আরও অনেক সূত্র
+        📰 Latest News – BBC Bangla, Prothom Alo & more
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
@@ -74,7 +74,7 @@ export default function Navbar() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="সংবাদ খুঁজুন..."
+                placeholder="Search news..."
                 className="bg-transparent text-sm text-slate-700 dark:text-slate-200 placeholder-slate-400 outline-none w-36"
               />
             </form>
@@ -83,7 +83,7 @@ export default function Navbar() {
             <Link
               href="/bookmarks"
               className="p-2.5 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
-              title="বুকমার্ক"
+              title="Bookmarks"
               aria-label="Bookmarks"
             >
               <Bookmark className="w-5 h-5" />
@@ -128,7 +128,7 @@ export default function Navbar() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="সংবাদ খুঁজুন..."
+                placeholder="Search news..."
                 className="bg-transparent text-sm text-slate-700 dark:text-slate-200 placeholder-slate-400 outline-none flex-1"
               />
             </form>

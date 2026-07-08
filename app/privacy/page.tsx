@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'গোপনীয়তা নীতি',
-  description: 'NewsHub BD এর গোপনীয়তা নীতি',
+  title: 'Privacy Policy',
+  description: 'Privacy Policy of NewsHub BD',
 };
 
 export default function PrivacyPage() {
@@ -10,7 +10,7 @@ export default function PrivacyPage() {
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10">
       <div className="card p-6 sm:p-8">
         <h1 className="text-3xl font-black text-slate-900 dark:text-slate-100 mb-4">
-          গোপনীয়তা নীতি
+          Privacy Policy
         </h1>
         <div className="space-y-4 text-slate-600 dark:text-slate-300 leading-relaxed">
           <p>

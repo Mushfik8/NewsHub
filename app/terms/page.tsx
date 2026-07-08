@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'ব্যবহারের শর্তাবলি',
-  description: 'NewsHub BD এর ব্যবহারের শর্তাবলি',
+  title: 'Terms & Conditions',
+  description: 'Terms and Conditions of NewsHub BD',
 };
 
 export default function TermsPage() {
@@ -10,7 +10,7 @@ export default function TermsPage() {
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10">
       <div className="card p-6 sm:p-8">
         <h1 className="text-3xl font-black text-slate-900 dark:text-slate-100 mb-6">
-          ব্যবহারের শর্তাবলি (Terms and Conditions)
+          Terms and Conditions
         </h1>
         <div className="space-y-6 text-slate-600 dark:text-slate-300 leading-relaxed">
           <section>

@@ -19,18 +19,27 @@ export default function Footer() {
               <span className="font-bold text-xl text-white">NewsHub <span className="text-blue-400">BD</span></span>
             </div>
             <p className="text-sm leading-relaxed">
-              বাংলাদেশ ও বিশ্বের সর্বশেষ সংবাদ এক জায়গায়। আমরা কোনো সংবাদ কপি করি না, শুধুমাত্র মূল সূত্রে পুনঃনির্দেশ করি।
+              The latest news from Bangladesh and the world in one place. We do not copy news, we only redirect to the original sources.
             </p>
           </div>
 
           {/* Categories — dynamically from CATEGORIES */}
           <div>
-            <h3 className="text-white font-semibold mb-4">বিভাগ</h3>
+            <h3 className="text-white font-semibold mb-4">Categories</h3>
             <ul className="space-y-2 text-sm">
               {footerCategories.map((cat) => (
                 <li key={cat}>
                   <Link href={`/category/${encodeURIComponent(cat)}`} className="hover:text-blue-400 transition-colors">
-                    {cat}
+                    {cat === 'সব' ? 'All' :
+                     cat === 'বাংলাদেশ' ? 'Bangladesh' :
+                     cat === 'আন্তর্জাতিক' ? 'International' :
+                     cat === 'রাজনীতি' ? 'Politics' :
+                     cat === 'খেলাধুলা' ? 'Sports' :
+                     cat === 'বিনোদন' ? 'Entertainment' :
+                     cat === 'প্রযুক্তি' ? 'Technology' :
+                     cat === 'অর্থনীতি' ? 'Economy' :
+                     cat === 'স্বাস্থ্য' ? 'Health' :
+                     cat === 'শিক্ষা' ? 'Education' : cat}
                   </Link>
                 </li>
               ))}
@@ -39,7 +48,7 @@ export default function Footer() {
 
           {/* Sources — dynamically from DEFAULT_SOURCES */}
           <div>
-            <h3 className="text-white font-semibold mb-4">সংবাদ সূত্র</h3>
+            <h3 className="text-white font-semibold mb-4">News Sources</h3>
             <ul className="space-y-2 text-sm">
               {DEFAULT_SOURCES.map((src) => (
                 <li key={src.slug}>
@@ -54,20 +63,20 @@ export default function Footer() {
 
           {/* Links */}
           <div>
-            <h3 className="text-white font-semibold mb-4">তথ্য</h3>
+            <h3 className="text-white font-semibold mb-4">Information</h3>
             <ul className="space-y-2 text-sm">
-              <li><Link href="/about" className="hover:text-blue-400 transition-colors">আমাদের সম্পর্কে</Link></li>
-              <li><Link href="/privacy" className="hover:text-blue-400 transition-colors">গোপনীয়তা নীতি</Link></li>
-              <li><Link href="/terms" className="hover:text-blue-400 transition-colors">ব্যবহারের শর্তাবলি</Link></li>
-              <li><Link href="/bookmarks" className="hover:text-blue-400 transition-colors">বুকমার্ক</Link></li>
-              <li><Link href="/admin" className="hover:text-blue-400 transition-colors">অ্যাডমিন</Link></li>
+              <li><Link href="/about" className="hover:text-blue-400 transition-colors">About Us</Link></li>
+              <li><Link href="/privacy" className="hover:text-blue-400 transition-colors">Privacy Policy</Link></li>
+              <li><Link href="/terms" className="hover:text-blue-400 transition-colors">Terms & Conditions</Link></li>
+              <li><Link href="/bookmarks" className="hover:text-blue-400 transition-colors">Bookmarks</Link></li>
+              <li><Link href="/admin" className="hover:text-blue-400 transition-colors">Admin Panel</Link></li>
             </ul>
           </div>
         </div>
 
         <div className="mt-10 pt-8 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs">
-          <p>© {new Date().getFullYear()} NewsHub BD। সকল সংবাদের স্বত্ব মূল প্রকাশকের।</p>
-          <p className="text-slate-500">আমরা RSS ফিড ব্যবহার করে সংবাদ সংগ্রহ করি। কোনো সংবাদ কপি করা হয় না।</p>
+          <p>© {new Date().getFullYear()} NewsHub BD. All rights belong to original publishers.</p>
+          <p className="text-slate-500">We aggregate news using RSS feeds. No news is copied.</p>
         </div>
       </div>
     </footer>

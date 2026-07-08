@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'আমাদের সম্পর্কে',
-  description: 'NewsHub BD সম্পর্কে জানুন',
+  title: 'About Us',
+  description: 'Learn about NewsHub BD',
 };
 
 export default function AboutPage() {
@@ -10,7 +10,7 @@ export default function AboutPage() {
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10">
       <div className="card p-6 sm:p-8">
         <h1 className="text-3xl font-black text-slate-900 dark:text-slate-100 mb-4">
-          আমাদের সম্পর্কে
+          About Us
         </h1>
         <div className="space-y-4 text-slate-600 dark:text-slate-300 leading-relaxed">
           <p>

@@ -138,26 +138,26 @@ export default function AdminPage() {
             <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
               <Lock className="w-8 h-8 text-blue-600 dark:text-blue-400" />
             </div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">অ্যাডমিন প্যানেল</h1>
-            <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">NewsHub BD অ্যাডমিন</p>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Admin Panel</h1>
+            <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">NewsHub BD Admin</p>
           </div>
           <form onSubmit={login} className="space-y-4">
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="অ্যাডমিন ইমেইল"
+              placeholder="Admin Email"
               className="w-full px-4 py-3 bg-slate-100 dark:bg-slate-700 rounded-xl text-slate-900 dark:text-slate-100 placeholder-slate-400 outline-none focus:ring-2 ring-blue-500"
             />
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="পাসওয়ার্ড দিন"
+              placeholder="Enter Password"
               className="w-full px-4 py-3 bg-slate-100 dark:bg-slate-700 rounded-xl text-slate-900 dark:text-slate-100 placeholder-slate-400 outline-none focus:ring-2 ring-blue-500"
             />
             {authError && <p className="text-red-500 text-sm text-center">{authError}</p>}
-            <button type="submit" className="btn-primary w-full justify-center py-3">প্রবেশ করুন</button>
+            <button type="submit" className="btn-primary w-full justify-center py-3">Login</button>
           </form>
         </div>
       </div>
@@ -170,24 +170,24 @@ export default function AdminPage() {
         <div>
           <h1 className="text-3xl font-black text-slate-900 dark:text-slate-100 flex items-center gap-3">
             <BarChart3 className="w-8 h-8 text-blue-600" />
-            অ্যাডমিন ড্যাশবোর্ড
+            Admin Dashboard
           </h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">NewsHub BD পরিচালনা কেন্দ্র</p>
+          <p className="text-slate-500 dark:text-slate-400 mt-1">NewsHub BD Control Center</p>
         </div>
         <div className="flex gap-3 flex-wrap">
           <button onClick={async () => {
             await fetch('/api/admin/logout', { method: 'POST' });
             setAuthed(false);
           }} className="btn-secondary text-red-600 dark:text-red-400 border-red-200 dark:border-red-900/50 hover:bg-red-50 dark:hover:bg-red-900/20">
-            লগআউট
+            Logout
           </button>
           <button onClick={fetchStats} disabled={loading} className="btn-secondary">
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            রিফ্রেশ
+            Refresh
           </button>
           <button onClick={triggerFetch} disabled={fetching} className="btn-primary">
             <RefreshCw className={`w-4 h-4 ${fetching ? 'animate-spin' : ''}`} />
-            {fetching ? 'ফেচ হচ্ছে...' : 'এখনই ফেচ করুন'}
+            {fetching ? 'Fetching...' : 'Fetch Now'}
           </button>
         </div>
       </div>
@@ -207,7 +207,7 @@ export default function AdminPage() {
                 <Newspaper className="w-8 h-8 text-blue-600" />
                 <div>
                   <p className="text-2xl font-black text-slate-900 dark:text-slate-100">{stats.totalArticles.toLocaleString()}</p>
-                  <p className="text-slate-500 dark:text-slate-400 text-sm">মোট সংবাদ</p>
+                  <p className="text-slate-500 dark:text-slate-400 text-sm">Total Articles</p>
                 </div>
               </div>
             </div>
@@ -216,7 +216,7 @@ export default function AdminPage() {
                 <Clock className="w-8 h-8 text-green-600" />
                 <div>
                   <p className="text-2xl font-black text-slate-900 dark:text-slate-100">{stats.totalSources}</p>
-                  <p className="text-slate-500 dark:text-slate-400 text-sm">সক্রিয় সূত্র</p>
+                  <p className="text-slate-500 dark:text-slate-400 text-sm">Active Sources</p>
                 </div>
               </div>
             </div>
@@ -225,9 +225,9 @@ export default function AdminPage() {
                 <CheckCircle className="w-8 h-8 text-purple-600" />
                 <div>
                   <p className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                    {stats.lastFetch ? formatBnDate(stats.lastFetch) : 'কখনো নয়'}
+                    {stats.lastFetch ? formatBnDate(stats.lastFetch) : 'Never'}
                   </p>
-                  <p className="text-slate-500 dark:text-slate-400 text-sm">শেষ আপডেট</p>
+                  <p className="text-slate-500 dark:text-slate-400 text-sm">Last Update</p>
                 </div>
               </div>
             </div>
@@ -238,17 +238,17 @@ export default function AdminPage() {
             <div className="card p-6 mb-8">
               <h2 className="section-title mb-4">
                 <Activity className="w-5 h-5 text-blue-500" />
-                সূত্র স্বাস্থ্য পরিদর্শন
+                Source Health Inspection
               </h2>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="text-left text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
-                      <th className="pb-3 font-semibold">সূত্র</th>
-                      <th className="pb-3 font-semibold">অবস্থা</th>
-                      <th className="pb-3 font-semibold">শেষ সফল ফেচ</th>
-                      <th className="pb-3 font-semibold">মোট সংবাদ</th>
-                      <th className="pb-3 font-semibold">শেষ ত্রুটি</th>
+                      <th className="pb-3 font-semibold">Source</th>
+                      <th className="pb-3 font-semibold">Status</th>
+                      <th className="pb-3 font-semibold">Last Success</th>
+                      <th className="pb-3 font-semibold">Articles</th>
+                      <th className="pb-3 font-semibold">Last Error</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
@@ -292,10 +292,10 @@ export default function AdminPage() {
           <div className="card p-6 mb-8">
             <h2 className="section-title mb-4">
               <TrendingUp className="w-5 h-5 text-purple-500" />
-              ফিড যাচাইকরণ
+              Feed Verification
             </h2>
             <p className="text-sm text-slate-500 dark:text-slate-400 mb-3">
-              নতুন সূত্র যোগ করার আগে ফিড URL যাচাই করুন।
+              Verify RSS Feed URL before adding new sources.
             </p>
             <div className="flex gap-2">
               <input
@@ -306,7 +306,7 @@ export default function AdminPage() {
                 className="flex-1 px-4 py-2.5 bg-slate-100 dark:bg-slate-700 rounded-lg text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 outline-none focus:ring-2 ring-blue-500"
               />
               <button onClick={handleVerifyFeed} disabled={verifying} className="btn-primary whitespace-nowrap">
-                {verifying ? 'যাচাই হচ্ছে...' : 'যাচাই করুন'}
+                {verifying ? 'Verifying...' : 'Verify'}
               </button>
             </div>
             {verifyResult && (
@@ -337,7 +337,7 @@ export default function AdminPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             {/* Category Breakdown */}
             <div className="card p-6">
-              <h2 className="section-title mb-4">বিভাগ অনুযায়ী সংবাদ</h2>
+              <h2 className="section-title mb-4">News by Category</h2>
               <div className="space-y-3">
                 {stats.categoryBreakdown.map(c => (
                   <div key={c._id} className="flex items-center gap-3">
@@ -356,7 +356,7 @@ export default function AdminPage() {
 
             {/* Source Breakdown */}
             <div className="card p-6">
-              <h2 className="section-title mb-4">সূত্র অনুযায়ী সংবাদ</h2>
+              <h2 className="section-title mb-4">News by Source</h2>
               <div className="space-y-3">
                 {stats.sourceBreakdown.map(s => (
                   <div key={s._id} className="flex items-center gap-3">
@@ -378,16 +378,16 @@ export default function AdminPage() {
           <div className="card p-6">
             <h2 className="section-title mb-4">
               <AlertCircle className="w-5 h-5 text-orange-500" />
-              সাম্প্রতিক ফেচ লগ
+              Recent Fetch Logs
             </h2>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-left text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
-                    <th className="pb-3 font-semibold">সময়</th>
-                    <th className="pb-3 font-semibold">নতুন সংবাদ</th>
-                    <th className="pb-3 font-semibold">ত্রুটি</th>
-                    <th className="pb-3 font-semibold">বিস্তারিত</th>
+                    <th className="pb-3 font-semibold">Time</th>
+                    <th className="pb-3 font-semibold">New News</th>
+                    <th className="pb-3 font-semibold">Errors</th>
+                    <th className="pb-3 font-semibold">Details</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-700">

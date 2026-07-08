@@ -169,15 +169,15 @@ export default function HomePage() {
             ) : articles.length === 0 ? (
               <div className="text-center py-20 text-slate-500 dark:text-slate-400">
                 <p className="text-4xl mb-4">📰</p>
-                <p className="text-lg font-medium">কোনো সংবাদ পাওয়া যায়নি</p>
-                <p className="text-sm mt-2">ডেটাবেসে সংবাদ নেই। অ্যাডমিন থেকে ফেচ করুন।</p>
+                <p className="text-lg font-medium">No news found</p>
+                <p className="text-sm mt-2">No news in the database. Fetch from admin panel.</p>
               </div>
             ) : (
               <>
                 <div className="mb-2">
                   <h2 className="section-title mb-4">
                     <Flame className="w-5 h-5 text-orange-500" />
-                    সর্বশেষ সংবাদ
+                    Latest News
                   </h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                     {featured.map((article) => (
@@ -209,7 +209,7 @@ export default function HomePage() {
                       ) : (
                         <ArrowDown className="w-4 h-4" />
                       )}
-                      {loadingMore ? 'লোড হচ্ছে...' : 'আরও সংবাদ'}
+                      {loadingMore ? 'Loading...' : 'More News'}
                     </button>
                   </div>
                 )}
@@ -224,7 +224,7 @@ export default function HomePage() {
               <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4" style={{ boxShadow: 'var(--shadow)' }}>
                 <h3 className="section-title mb-4">
                   <TrendingUp className="w-5 h-5 text-red-500" />
-                  ট্রেন্ডিং
+                  Trending
                 </h3>
                 <div className="space-y-1">
                   {trending.map((article, index) => (
@@ -240,7 +240,7 @@ export default function HomePage() {
             )}
 
             <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4" style={{ boxShadow: 'var(--shadow)' }}>
-              <h3 className="section-title mb-4">📡 সংবাদ সূত্র</h3>
+              <h3 className="section-title mb-4">📡 News Sources</h3>
               {sources.map((source, index) => (
                 <a
                   key={source.slug}

@@ -58,6 +58,7 @@ export default function Footer() {
             <ul className="space-y-2 text-sm">
               <li><Link href="/about" className="hover:text-blue-400 transition-colors">আমাদের সম্পর্কে</Link></li>
               <li><Link href="/privacy" className="hover:text-blue-400 transition-colors">গোপনীয়তা নীতি</Link></li>
+              <li><Link href="/terms" className="hover:text-blue-400 transition-colors">ব্যবহারের শর্তাবলি</Link></li>
               <li><Link href="/bookmarks" className="hover:text-blue-400 transition-colors">বুকমার্ক</Link></li>
               <li><Link href="/admin" className="hover:text-blue-400 transition-colors">অ্যাডমিন</Link></li>
             </ul>

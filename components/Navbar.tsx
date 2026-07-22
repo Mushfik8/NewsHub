@@ -142,6 +142,14 @@ export default function Navbar() {
                 {link.label}
               </Link>
             ))}
+            <div className="h-px bg-slate-200 dark:bg-slate-700 my-2" />
+            <Link
+              href="/contact"
+              onClick={() => setMenuOpen(false)}
+              className="block px-3 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors min-h-[44px] flex items-center"
+            >
+              Contact Us
+            </Link>
           </div>
         )}
       </div>
